@@ -6,10 +6,10 @@ package Main;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
@@ -23,6 +23,7 @@ import javax.swing.Timer;
  *
  */
 class AnPanel extends JPanel {
+	private Graphics gImg;
 	AnPanel() {
 		super();
 		x = xNew = 310;
@@ -39,6 +40,8 @@ class AnPanel extends JPanel {
 		} catch (IOException e) {
 			img = null;
 		}
+		this.addKeyListener(new InputKeyEvents());
+		this.setFocusable(true);
 		
 		rnd = new Random();
 
@@ -72,15 +75,56 @@ class AnPanel extends JPanel {
 	public void paint(Graphics g1) {
 		Graphics2D g = (Graphics2D)g1;
 		// g.drawString("Animation", x,y);
-		System.out.println("Painting");
-		g.clearRect(x, y, img.getWidth(null), img.getHeight(null));
+		//System.out.println("Painting");
+		g.clearRect(xNew, yNew, img.getWidth(null), img.getHeight(null));
 		g.drawImage(img, xNew, yNew, this);
 		x = xNew;
 		y = yNew;
+	}
+	public void MoveImg(int x, int y) {
+		xNew = x + xNew;
+		yNew = y + yNew;
 	}
 
 	int x, y, xNew, yNew;
 	protected Image img, backImg;
 	protected Random rnd;
+	public class InputKeyEvents extends KeyAdapter {
+		public void keyPressed(KeyEvent e) {
+			int keys = e.getKeyCode();
+			int x, y;
+			if(keys == KeyEvent.VK_W) {
+				y = -4;
+				x = 0;
+				MoveImg(x, y);
+				System.out.println("Move Up");
+			}
+			if(keys == KeyEvent.VK_A) {
+				y = 0;
+				x = -4;
+				MoveImg(x, y);
+				System.out.println("Move Left");
+			}
+			if(keys == KeyEvent.VK_S) {
+				y = 4;
+				x = 0;
+				MoveImg(x, y);
+				System.out.println("Move Down");
+			}
+			if(keys == KeyEvent.VK_D) {
+				y = 0;
+				x = 4;
+				MoveImg(x, y);
+				System.out.println("Move Right");
+			}
+			repaint();
+		}
+		 public void keyTyped(KeyEvent ke) {}
+	     
+		    
+		 public void keyReleased(KeyEvent ke) {}
+
+	}
+
 	
 }

@@ -8,7 +8,7 @@ import java.awt.BorderLayout;
 import javax.swing.JFrame;
 
 /**
- * @author Dylan
+ * @author Dylan Steele, Tyler Lutz
  *
  */
 public class AnimationFrame extends JFrame {

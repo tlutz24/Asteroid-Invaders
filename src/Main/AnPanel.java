@@ -3,6 +3,7 @@
  */
 package Main;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -19,7 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 
 /**
- * @author Dylan
+ * @author Dylan Steele, Tyler Lutz
  *
  */
 class AnPanel extends JPanel {
@@ -29,12 +30,10 @@ class AnPanel extends JPanel {
 		x = xNew = 310;
 		y = yNew = 300;
 		try {
-			img = ImageIO
-					.read(new File(
-							"J:/MacWorkSpace/Game/Images/Ship.png"));
+			img = ImageIO	//attempt to read local files
+					.read(new File("Images/ship.png"));
 			backImg = ImageIO
-					.read(new File(
-							"J:/MacWorkSpace/Game/Images/background.png"));
+					.read(new File("Images/background.png"));
 			
 
 		} catch (IOException e) {
@@ -76,19 +75,22 @@ class AnPanel extends JPanel {
 		Graphics2D g = (Graphics2D)g1;
 		// g.drawString("Animation", x,y);
 		//System.out.println("Painting");
-		g.clearRect(xNew, yNew, img.getWidth(null), img.getHeight(null));
+		g.setBackground(Color.black);
+		g.clearRect(0, 0, 640, 480);
 		g.drawImage(img, xNew, yNew, this);
 		x = xNew;
 		y = yNew;
 	}
+	
 	public void MoveImg(int x, int y) {
 		xNew = x + xNew;
 		yNew = y + yNew;
 	}
-
+	
 	int x, y, xNew, yNew;
 	protected Image img, backImg;
 	protected Random rnd;
+	
 	public class InputKeyEvents extends KeyAdapter {
 		public void keyPressed(KeyEvent e) {
 			int keys = e.getKeyCode();

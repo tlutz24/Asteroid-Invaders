@@ -4,6 +4,7 @@
 package Main;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 
 import javax.swing.JFrame;
 
@@ -14,10 +15,11 @@ import javax.swing.JFrame;
 public class AnimationFrame extends JFrame {
 
 	AnimationFrame()  {
-		super ("Astroid Invader");
-		this.setSize(640, 400);
-		this.setResizable(false);
+		super ("Asteroid Invaders!");//set title of frame
+		this.setSize(640, 750);//set game size
+		this.setResizable(false);//do not allow resizing
 		this.setLocationRelativeTo(null);
+		setBackground(Color.black);//set background to black
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
 		anPanel = new AnPanel();

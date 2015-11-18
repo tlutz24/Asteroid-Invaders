@@ -28,9 +28,10 @@ class AnPanel extends JPanel implements Runnable {
 	//int bX, bY;//bullet location
 	List<Asteroid> asteroids = new ArrayList<Asteroid>();
 	//int astX, astY, astXDirec, astYDirec; <- moved to Asteroid class
-	protected Image img, backImg;//ship and background image
+	protected Image img, backImg, buff;//ship and background image
 	protected boolean title, createAst, readyToFire, shot = false;
 	Random rnd;
+	String info;
 
 	Rectangle p;//rectangle to represent player
 	
@@ -51,8 +52,8 @@ class AnPanel extends JPanel implements Runnable {
 		try {
 			img = ImageIO	//attempt to read local files
 					.read(new File("Images/shipSmall.png"));
-			//backImg = ImageIO
-			//		.read(new File("Images/background.png"));
+			backImg = ImageIO
+					.read(new File("Images/Asteroids-Background.png"));
 			
 
 		} catch (IOException e) {
@@ -61,6 +62,7 @@ class AnPanel extends JPanel implements Runnable {
 		this.addKeyListener(new InputKeyEvents());
 		this.setFocusable(true);
 		resetGame();
+		setInfo();
 		p = new Rectangle(xNew, yNew, 30, 30);
 		//create thread and start it
 		Thread th1 = new Thread(this);
@@ -125,6 +127,11 @@ class AnPanel extends JPanel implements Runnable {
 		while(asteroids.size() > 0)
 			asteroids.remove(0);
 	}
+	
+	public void setInfo(){
+		info = "# of Asteroids: " + asteroids.size();
+	}
+	
 	/**
 	 * TODO: fix collision detection so player cannot glitch through barrier
 	 * @return 
@@ -201,6 +208,7 @@ class AnPanel extends JPanel implements Runnable {
 			{
 				//draw player
 				movePlyr(xDirec, yDirec);
+				setInfo();
 				//handle shots
 				shoot();
 				//handle asteroid creation
@@ -221,19 +229,21 @@ class AnPanel extends JPanel implements Runnable {
 	}
 	
 	public void paint(Graphics g){
-		backImg = createImage(getWidth(), getHeight());
-		gImg = backImg.getGraphics();
+		buff = createImage(getWidth(), getHeight());
+		gImg = buff.getGraphics();
 		paintComponent(gImg);
 		
-		g.drawImage(backImg, 0, 0, this);
+		g.drawImage(buff, 0, 0, this);
 	}
 
 	public void paintComponent(Graphics g1) {
 		Graphics2D g = (Graphics2D)g1;
 		
+		g.drawImage(backImg, 0, 0, this);
+		
 		//draw barriers
 		g.setColor(Color.red);
-		for(int i = 0; i < 4; i++)
+		for(int i = 0; i < barriers.size(); i++)
 			g.fillRect(barriers.get(i).x, barriers.get(i).y, barriers.get(i).width, barriers.get(i).height);
 		
 		//display title menu or game
@@ -249,6 +259,7 @@ class AnPanel extends JPanel implements Runnable {
 		else
 		{
 			g.setFont(sFont);//display game
+			g.drawString(info, 20, 10);
 			g.drawString("Press ESC to quit to menu.", 20, 35);
 			g.drawString("Points: " + pts, 20, 50);
 			g.drawImage(img, xNew, yNew, this);
@@ -257,8 +268,6 @@ class AnPanel extends JPanel implements Runnable {
 				for(int i = 0; i < bullets.size(); i++)
 					g.fillRect(bullets.get(i).x, bullets.get(i).y, bullets.get(i).width, bullets.get(i).height);
 		}
-		//Asteroid test = new Asteroid(250, 250, 2);
-		//g.drawImage(test.asteroid, test.x, test.y, this);
 		
 		for(int i = 0; i < asteroids.size(); i++)
 		{
@@ -275,8 +284,13 @@ class AnPanel extends JPanel implements Runnable {
 			for(int i = 0; i < bullets.size(); i++)
 			{
 				bullets.get(i).y -= 3;
-				if(bullets.get(i).y < -3)
-					bullets.remove(i);
+				int y = bullets.get(i).y;
+				int x = bullets.get(i).x;
+				for(int j = 0; j < barriers.size(); j++){
+					Barrier b = barriers.get(j);
+					if(y < -3 || (y > b.y && y < b.y + b.height && x > b.x && x < b.x + b.width))
+						bullets.remove(i);
+				}
 			}
 		if(bullets.size() == 0)//detect bullets leaving screen and reset shot
 			{

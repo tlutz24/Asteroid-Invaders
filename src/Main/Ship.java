@@ -1,6 +1,9 @@
 package Main;
 
+import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.List;
 /**
  * 
  * @author Tyler Lutz
@@ -10,12 +13,20 @@ import java.awt.Rectangle;
  */
 public class Ship implements Runnable {
 	
-	int x, y, xDirec, yDirec;
+	int x, y, xNew, yNew, xDirec, yDirec;
 	protected boolean readyToFire, shot = false;
+
+	List<Integer> bX = new ArrayList<Integer>();
+	List<Integer> bY = new ArrayList<Integer>();
 	
-	Rectangle bullet;
+	//Rectangle bullet;
+	List<Rectangle> bullets = new ArrayList<Rectangle>();
 	
 	public Ship(){
+		
+	}
+	
+	public void paint(Graphics g){
 		
 	}
 	

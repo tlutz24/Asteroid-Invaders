@@ -15,100 +15,93 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 /**
- * @author Dylan Steele, Tyler Lutz
+ * @author Dylan Steele
+ * @author Tyler Lutz
+ * 
  *
  */
 class AnPanel extends JPanel implements Runnable {
+	/**Graphics object used to draw game*/
 	private Graphics gImg;
-	int x, y, xNew, yNew;//player position
-	int xDirec, yDirec;//player movement direction
-	int pts;//player points
-	List<Integer> bX = new ArrayList<Integer>();
-	List<Integer> bY = new ArrayList<Integer>();
-	//int bX, bY;//bullet location
-	List<Asteroid> asteroids = new ArrayList<Asteroid>();
-	//int astX, astY, astXDirec, astYDirec; <- moved to Asteroid class
+	/**Player position and variables*/
+//	int x, y, xNew, yNew;
+	/**Player movement direction variables*/
+//	int xDirec, yDirec;
+	/**Player points variable*/
+	int pts;
+	/**Asteroid generation speed variable*/
+	int astGenSpeed;
+	/**Bullet 'x' coordinates*/
+	List<Integer> bX;
+	/**Bullet 'y' coordinates*/
+	List<Integer> bY;
+	/**Asteroid collection for game*/
+	List<Asteroid> asteroids;
+	/**Images for background and ship*/
 	protected Image img, backImg, buff;//ship and background image
+	/**Boolean variables for game flow control*/
 	protected boolean title, createAst, readyToFire, shot = false;
+	/**Random machine for asteroids*/
 	Random rnd;
-	String info;
-
-	Rectangle p;//rectangle to represent player
+	/**String to hold game playing info*/
+//	String info;
 	
-	List<Barrier> barriers = new ArrayList<Barrier>();//create list of barriers
-	List<Rectangle> bullets = new ArrayList<Rectangle>();
-	//Rectangle bullet;
+	/**Rectangle to represent player*/
+	//Rectangle p;
 	
-	//Fonts
-	Font tFont = new Font("Monospaced", Font.ITALIC | Font.BOLD, 45);//title font
-	Font sFont = new Font("Monospaced", Font.ITALIC, 15);//statistics font
+	Ship p1;
 	
+	/**Barrier collection for game*/
+	List<Barrier> barriers;
+	/**Bullet collection for game*/
+	List<Rectangle> bullets;
+	
+	/**Font for title screen*/
+	Font tFont = new Font("Monospaced", Font.ITALIC | Font.BOLD, 45);
+	/**Font for statistics in game*/
+	Font sFont = new Font("Monospaced", Font.ITALIC, 15);
+	
+	/**Constructor for class
+	 * 
+	 */
 	AnPanel() {
 		super();
-		xDirec = yDirec = 0;//no movement at start
+//		xDirec = yDirec = 0;//no movement at start
 		pts = 0;//player points
 		title = true;//open game menu
 		rnd = new Random();
+		bX = new ArrayList<Integer>();
+		bY = new ArrayList<Integer>();
+		asteroids = new ArrayList<Asteroid>();
+		barriers = new ArrayList<Barrier>();
+		bullets = new ArrayList<Rectangle>();
 		try {
-			img = ImageIO	//attempt to read local files
-					.read(new File("Images/shipSmall.png"));
+			//img = ImageIO.read(new File("Images/shipSmall.png"));
 			backImg = ImageIO
 					.read(new File("Images/Asteroids-Background.png"));
-			
-
 		} catch (IOException e) {
-			img = null;
+			backImg = null;
 		}
 		this.addKeyListener(new InputKeyEvents());
 		this.setFocusable(true);
+		p1 = new Ship();
 		resetGame();
-		setInfo();
-		p = new Rectangle(xNew, yNew, 30, 30);
+		//p = new Rectangle(xNew, yNew, 30, 30);
 		//create thread and start it
 		Thread th1 = new Thread(this);
 		th1.start();
 		
 	}
 	
-	public void handleAsteroids(){
-		int x, size, y, xDirec, yDirec;
-		Asteroid temp;
-		if(createAst)
-		{
-			x = rnd.nextInt(650);
-			size = rnd.nextInt(3)+1;
-			y = -25*size;
-			xDirec = rnd.nextInt(6) - 3;
-			yDirec = rnd.nextInt(3);
-			asteroids.add(new Asteroid(x, y, xDirec, yDirec, size));
-		}
-		for(int i = 0; i < asteroids.size(); i++)//move active asteroids
-		{
-			temp = asteroids.get(i);
-			temp.y += 8*temp.yDirec;
-			temp.x += 4*temp.xDirec;
-			
-			if(temp.x < -50)//left edge
-			{
-				temp.x = temp.y;
-				temp.y = -50;
-				temp.xDirec *= -1;
-				temp.yDirec += 2;
-				
-			}
-			if(temp.x > 640)
-			{
-				temp.x = temp.y;
-				temp.y = -50;
-				temp.xDirec *= -1;
-				temp.yDirec += 2;
-			}
-			if(temp.y > 750)
-				asteroids.remove(i);
-			//add overflow from sides to top
-		}
+	public void resetGame(){
+		p1.setLocation(305, 650);//set initial position
+		createAst = false;
+		astGenSpeed = 250;
+		setBarriers(4, 3);
+		while(asteroids.size() > 0)
+			asteroids.remove(0);
 	}
-	
+
 	public void setBarriers(int numBarriers, int strength){
 		barriers = new ArrayList<Barrier>();
 		Barrier bar;//temp for creating barriers
@@ -119,19 +112,76 @@ class AnPanel extends JPanel implements Runnable {
 		}
 	}
 	
-	public void resetGame(){
-		x = xNew = 305;//set initial position
-		y = yNew = 650;
-		createAst = false;
-		setBarriers(4, 3);
-		while(asteroids.size() > 0)
-			asteroids.remove(0);
+	@Override
+	public void run() {
+		int count = 0;
+		try{
+			while(true)
+			{
+				//draw player
+				movePlyr();
+				//handle shots
+				p1.shoot(barriers);
+				//create asteroid
+				if(count == astGenSpeed){
+					count = 0;
+					if(createAst)
+						createAsteroids();
+				}
+				//move or remove asteroids
+				handleAsteroids();
+				
+				//set speed of animation
+				Thread.sleep(15);//lower = faster while higher = slower
+				count++;
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println("Error at run: "+ e.toString());
+		}	
 	}
-	
-	public void setInfo(){
-		info = "# of Asteroids: " + asteroids.size();
+
+	public void movePlyr() {
+		//check if move is allowed
+		//p.setLocation(xNew, yNew);
+		p1.setLocation(p1.xNew, p1.yNew);//necessary?
+		
+		if(detectCollide())
+		{
+			//prevent player from moving into barrier
+			
+			if (p1.yDirec == -1)
+				p1.yDirec = 1;//reverse move if there is collision
+			else if (p1.yDirec == 1)
+				p1.yDirec = -1;
+			if (p1.xDirec == -1)
+				p1.xDirec = 1;
+			else if (p1.xDirec == 1)
+				p1.xDirec = -1;
+			//move player
+			p1.xNew += (4*p1.xDirec);
+			p1.yNew += (4*p1.yDirec);
+			
+		}
+		else 
+		{
+			if ((p1.yDirec == -1) && (title || p1.yNew < 550))
+				p1.yDirec = 0;//cancel move if not allowed
+			if ((p1.xDirec == -1) && (title || p1.xNew < 0))
+				p1.xDirec = 0;
+			if ((p1.yDirec == 1) && (title || p1.yNew+30 > getSize().height))
+				p1.yDirec = 0;
+			if ((p1.xDirec == 1) && (title || p1.xNew+30 > getSize().width))
+				p1.xDirec = 0;
+			//move player
+			p1.xNew += (4*p1.xDirec);
+			p1.yNew += (4*p1.yDirec);
+		}
+		p1.x = p1.xNew;
+		p1.y = p1.yNew;
 	}
-	
+
 	/**
 	 * TODO: fix collision detection so player cannot glitch through barrier
 	 * @return 
@@ -141,7 +191,7 @@ class AnPanel extends JPanel implements Runnable {
 		Rectangle bar;
 		for(int i = 0; i < barriers.size(); i++){
 			bar = barriers.get(i).fullBarrier;
-			if(p.intersects(bar))
+			if(p1.p.intersects(bar))
 				return true;
 			/*	
 			if (p.intersects(bar))
@@ -159,73 +209,46 @@ class AnPanel extends JPanel implements Runnable {
 		}
 		return false;
 	}
-	
-	public void movePlyr(int xDir, int yDir) {
-		//check if move is allowed
-		p.setLocation(xNew, yNew);
-		
-		if(detectCollide())
-		{
-			//prevent player from moving into barrier
-			
-			if (yDir == -1)
-				yDir = 1;//reverse move if there is collision
-			else if (yDir == 1)
-				yDir = -1;
-			if (xDir == -1)
-				xDir = 1;
-			else if (xDir == 1)
-				xDir = -1;
-			//move player
-			xNew += (4*xDir);
-			yNew += (4*yDir);
-			
-		}
-		else 
-		{
-			if ((yDir == -1) && (title || yNew < 550))
-				yDir = 0;//cancel move if not allowed
-			if ((xDir == -1) && (title || xNew < 0))
-				xDir = 0;
-			if ((yDir == 1) && (title || yNew+30 > getSize().height))
-				yDir = 0;
-			if ((xDir == 1) && (title || xNew+30 > getSize().width))
-				xDir = 0;
-			//move player
-			xNew += (4*xDir);
-			yNew += (4*yDir);
-		}
-		x = xNew;
-		y = yNew;
+
+	public void createAsteroids(){
+		int x, size, y, xDirec, yDirec;
+		x = rnd.nextInt(650);
+		size = rnd.nextInt(3)+1;
+		y = -25*size;
+		xDirec = rnd.nextInt(6) - 3;
+		yDirec = rnd.nextInt(2) + 1;
+		asteroids.add(new Asteroid(x, y, xDirec, yDirec, size));
 	}
 	
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		int count = 0;
-		try{
-			while(true)
-			{
-				//draw player
-				movePlyr(xDirec, yDirec);
-				setInfo();
-				//handle shots
-				shoot();
-				//handle asteroid creation
-				if(count == 15){
-					handleAsteroids();
-					count = 0;
-				}
-				//set speed of animation
-				Thread.sleep(15);//lower = faster while higher = slower
-				count++;
-			}
-		}
-		catch(Exception e)
+	/**Creates asteroids and handles moving them and eventually removing them
+	 * 
+	 */
+	public void handleAsteroids(){
+		Asteroid temp;
+		for(int i = 0; i < asteroids.size(); i++)//move active asteroids
 		{
-			System.out.println("Error: "+ e.toString());
+			temp = asteroids.get(i);
+			temp.y += temp.yDirec;
+			temp.x += temp.xDirec;
+			
+			if(temp.x < -50)//left edge
+			{
+				temp.x = temp.y;
+				temp.y = -50;
+				temp.xDirec *= -1;
+				temp.yDirec ++;
+				
+			}
+			if(temp.x > 640)//right edge
+			{
+				temp.x = temp.y;
+				temp.y = -50;
+				temp.xDirec *= -1;
+				temp.yDirec ++;
+			}
+			if(temp.y > 750)//bottom edge
+				asteroids.remove(i);
 		}
-		
 	}
 	
 	public void paint(Graphics g){
@@ -254,19 +277,21 @@ class AnPanel extends JPanel implements Runnable {
 			g.setFont(tFont);//display Menu text
 			g.drawString("Asteroid Invaders!", 90, 150);
 			g.drawString("Press Enter to Start!", 50, 350);
-			g.drawImage(img, xNew, yNew, this);
+			//g.drawImage(p1.player, p1.xNew, p1.yNew, this);
+			p1.draw(g);
 		}
 		else
 		{
 			g.setFont(sFont);//display game
-			g.drawString(info, 20, 10);
+			g.drawString("# of Asteroids: " + asteroids.size(), 20, 20);
 			g.drawString("Press ESC to quit to menu.", 20, 35);
 			g.drawString("Points: " + pts, 20, 50);
-			g.drawImage(img, xNew, yNew, this);
+			//g.drawImage(p1.player, p1.xNew, p1.yNew, this);
+			p1.draw(g);//draw player
 			//draw shot
-			if(shot)
-				for(int i = 0; i < bullets.size(); i++)
-					g.fillRect(bullets.get(i).x, bullets.get(i).y, bullets.get(i).width, bullets.get(i).height);
+			if(p1.shot)
+				for(int i = 0; i < p1.bullets.size(); i++)
+					g.fillRect(p1.bullets.get(i).x, p1.bullets.get(i).y, p1.bullets.get(i).width, p1.bullets.get(i).height);
 		}
 		
 		for(int i = 0; i < asteroids.size(); i++)
@@ -278,70 +303,38 @@ class AnPanel extends JPanel implements Runnable {
 		repaint();
 	}
 	
-	public void shoot()
-	{
-		if(shot)//if bullet has been shot move it 3 pixels up per cycle
-			for(int i = 0; i < bullets.size(); i++)
-			{
-				bullets.get(i).y -= 3;
-				int y = bullets.get(i).y;
-				int x = bullets.get(i).x;
-				for(int j = 0; j < barriers.size(); j++){
-					Barrier b = barriers.get(j);
-					if(y < -3 || (y > b.y && y < b.y + b.height && x > b.x && x < b.x + b.width))
-						bullets.remove(i);
-				}
-			}
-		if(bullets.size() == 0)//detect bullets leaving screen and reset shot
-			{
-				shot = false;
-				readyToFire = true;
-			}
-		
-	}
-	
-	
 	public class InputKeyEvents extends KeyAdapter {
 		public void keyPressed(KeyEvent key) {
 			int keys = key.getKeyCode();
-			int x,y;
 			
 			if(keys == KeyEvent.VK_W)//move up
-				yDirec = -1;
+				p1.changeDirec('u');
 			if(keys == KeyEvent.VK_A)//move left
-				xDirec = -1;
+				p1.changeDirec('l');
 			if(keys == KeyEvent.VK_S)//move down
-				yDirec = 1;
+				p1.changeDirec('d');
 			if(keys == KeyEvent.VK_D)//move right
-				xDirec = 1;
+				p1.changeDirec('r');
 			if(keys == KeyEvent.VK_ENTER)//play game
 				title = false;
 			if(keys == KeyEvent.VK_ESCAPE)//end game
 				title = true;
 			if(keys == KeyEvent.VK_SPACE){//shoot
-				//if(bullet == null)
-				//	readyToFire = true;
-				if(readyToFire)
+				if(p1.readyToFire)
 				{
-					y = yNew;
-					x = xNew + 15;
-					bY.add(y);
-					bX.add(x);
-					//bY = yNew;
-					//bX = xNew + 15;
-					bullets.add(new Rectangle(x, y, 3, 3));
+					p1.addBullet();
 					shot = true;
 				}
 			}
 			if(keys == KeyEvent.VK_H)
-			{
 				for(int i = 0; i < 4; i++)
 					barriers.get(i).hit();
-			}
 			if(keys == KeyEvent.VK_P)
-			{
 				createAst = !createAst;//invert state
-			}
+			if(keys == KeyEvent.VK_UP)
+				astGenSpeed -= 50;
+			if(keys == KeyEvent.VK_DOWN)
+				astGenSpeed += 50;
 				
 		}
 		 public void keyTyped(KeyEvent key) { }   
@@ -349,42 +342,18 @@ class AnPanel extends JPanel implements Runnable {
 			 int keys = key.getKeyCode();
 			 //reset direction to 0 when key is released
 				if(keys == KeyEvent.VK_W)
-					yDirec = 0;
+					p1.yDirec = 0;
 				if(keys == KeyEvent.VK_A)
-					xDirec = 0;
+					p1.xDirec = 0;
 				if(keys == KeyEvent.VK_S)
-					yDirec = 0;
+					p1.yDirec = 0;
 				if(keys == KeyEvent.VK_D)
-					xDirec = 0;
+					p1.xDirec = 0;
 				if(keys == KeyEvent.VK_SPACE)
 				{
 					//readyToFire = false;
 					
 				}
-					
 		 }
-
-	}
-	
-	public class Barrier{
-		int x, y, width, height;
-		List<Rectangle> barrier = new ArrayList<Rectangle>();
-		Rectangle fullBarrier;
-		Barrier(int x1, int y1, int strength){
-			x = x1;
-			y = y1;
-			width = 75;
-			height = strength * 10;
-			for(int i = 0; i < strength; i++)
-				barrier.add(new Rectangle(x, y + 10*i, width, 10));
-			fullBarrier = new Rectangle(x, y, width, height);
-		}
-		public void hit(){
-			y += 10;
-			height -=10;
-			if(height >= 0)
-				barrier.remove(0);
-			fullBarrier = new Rectangle(x, y, width, height);
-		}		
 	}
 }

@@ -224,14 +224,36 @@ class AnPanel extends JPanel implements Runnable {
 	 * 
 	 */
 	public void handleAsteroids(){
+		boolean hit = false;
 		Asteroid temp;
 		for(int i = 0; i < asteroids.size(); i++)//move active asteroids
 		{
 			temp = asteroids.get(i);
 			temp.y += temp.yDirec;
 			temp.x += temp.xDirec;
+			for(int j = 0; j < p1.bullets.size(); j++)
+				if(p1.bullets.get(i).intersects(temp.ast))
+					hit = true;
+				else 
+					hit = false;
+					
+			if(temp.y > 750 && asteroids.size() > 0)//bottom edge
+			{
+				asteroids.remove(i);
+				
+			}
 			
-			if(temp.x < -50)//left edge
+			else if(hit)
+			{
+				//delete current asteroid and create two smaller ones going opposite directions from same place
+				if(asteroids.size() > 0)//make sure to avoid null index 
+					asteroids.remove(i);
+				asteroids.add(new Asteroid(temp.x, temp.y, temp.xDirec, temp.yDirec, temp.size - 1));
+				asteroids.add(new Asteroid(temp.x, temp.y, -temp.xDirec, temp.yDirec, temp.size - 1));//goes opposite direction
+				p1.pts += (temp.size * 5);
+			}
+			
+			else if(temp.x < -50)//left edge
 			{
 				temp.x = temp.y;
 				temp.y = -50;
@@ -239,15 +261,14 @@ class AnPanel extends JPanel implements Runnable {
 				temp.yDirec ++;
 				
 			}
-			if(temp.x > 640)//right edge
+			else if(temp.x > 640)//right edge
 			{
 				temp.x = temp.y;
 				temp.y = -50;
 				temp.xDirec *= -1;
 				temp.yDirec ++;
 			}
-			if(temp.y > 750)//bottom edge
-				asteroids.remove(i);
+			
 		}
 	}
 	

@@ -102,7 +102,8 @@ public class Ship{
 				int x = bullets.get(i).x;
 				for(int j = 0; j < barriers.size(); j++){
 					Barrier b = barriers.get(j);
-					if(y < -3 || (y > b.y && y < b.y + b.height && x > b.x && x < b.x + b.width)){
+					if(bullets.size() > 0 && (y < -3 || (y > b.y && y < b.y + b.height && x > b.x && x < b.x + b.width))){
+						//System.out.println("Removing bullet #" + i + ".");
 						bullets.remove(i);
 						readyToFire = true;
 					}

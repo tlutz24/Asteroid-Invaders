@@ -138,6 +138,7 @@ class AnPanel extends JPanel implements Runnable {
 		}
 		catch(Exception e)
 		{
+			e.printStackTrace();
 			System.out.println("Error at run: "+ e.toString());
 		}	
 	}
@@ -232,7 +233,7 @@ class AnPanel extends JPanel implements Runnable {
 			temp.y += temp.yDirec;
 			temp.x += temp.xDirec;
 			for(int j = 0; j < p1.bullets.size(); j++)
-				if(p1.bullets.get(i).intersects(temp.ast))
+				if(p1.bullets.get(j).intersects(temp.ast))
 					hit = true;
 				else 
 					hit = false;

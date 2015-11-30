@@ -40,7 +40,7 @@ class AnPanel extends JPanel implements Runnable {
 	/**Images for background and ship*/
 	protected Image img, backImg, buff;//ship and background image
 	/**Boolean variables for game flow control*/
-	protected boolean title, createAst, readyToFire, shot = false;
+	protected boolean title, gameOver, createAst, readyToFire, shot = false;
 	/**Random machine for asteroids*/
 	Random rnd;
 	/**String to hold game playing info*/
@@ -94,6 +94,7 @@ class AnPanel extends JPanel implements Runnable {
 	}
 	
 	public void resetGame(){
+		gameOver = false;
 		p1.setLocation(305, 650);//set initial position
 		createAst = false;
 		astGenSpeed = 250;
@@ -118,6 +119,7 @@ class AnPanel extends JPanel implements Runnable {
 		try{
 			while(true)
 			{
+				astGenSpeed = 250;
 				//draw player
 				movePlyr();
 				//handle shots
@@ -194,19 +196,6 @@ class AnPanel extends JPanel implements Runnable {
 			bar = barriers.get(i).fullBarrier;
 			if(p1.p.intersects(bar))
 				return true;
-			/*	
-			if (p.intersects(bar))
-			{
-				if((p.x < bar.x && p.x + p.width > bar.x) && (p.y < bar.y + bar.height&& p.y + p.height > bar.y))
-					return 'l';
-				if((p.x < bar.x + bar.width && p.x + p.width > bar.x + bar.width) && (p.y < bar.y + bar.height&& p.y + p.height > bar.y))
-					return 'r';
-				if(p.x > bar.x && p.x + p.width > bar.x && (p.y < bar.y + bar.height&& p.y + p.height > bar.y))
-					return 'u';
-				
-			}
-				return 'x';
-				*/
 		}
 		return false;
 	}
@@ -214,7 +203,7 @@ class AnPanel extends JPanel implements Runnable {
 	public void createAsteroids(){
 		int x, size, y, xDirec, yDirec;
 		x = rnd.nextInt(650);
-		size = rnd.nextInt(3)+1;
+		size = (rnd.nextInt(3)+1) * 25;
 		y = -25*size;
 		xDirec = rnd.nextInt(6) - 3;
 		yDirec = rnd.nextInt(2) + 1;
@@ -225,35 +214,55 @@ class AnPanel extends JPanel implements Runnable {
 	 * 
 	 */
 	public void handleAsteroids(){
-		boolean hit = false;
+		boolean hit, hitBar;
+		hit = hitBar = false;
+		
 		Asteroid temp;
 		for(int i = 0; i < asteroids.size(); i++)//move active asteroids
 		{
 			temp = asteroids.get(i);
-			temp.y += temp.yDirec;
-			temp.x += temp.xDirec;
+			temp.moveAst();
+			
 			for(int j = 0; j < p1.bullets.size(); j++)
 				if(p1.bullets.get(j).intersects(temp.ast))
+				{
 					hit = true;
+					p1.bullets.remove(j);
+				}
 				else 
 					hit = false;
+			
+			for(int j = 0; j < barriers.size(); j++)
+			{
+				if(barriers.get(i).fullBarrier.intersects(temp.ast))
+				{
+					hitBar = true;
+					//for(int k = 0; k < temp.size; k+=25)
+						barriers.get(i).hit();
+				}
+				else
+					hitBar = false;
+			}
 					
 			if(temp.y > 750 && asteroids.size() > 0)//bottom edge
 			{
 				asteroids.remove(i);
-				
 			}
-			
 			else if(hit)
 			{
 				//delete current asteroid and create two smaller ones going opposite directions from same place
+				asteroids.add(new Asteroid(temp.x, temp.y, temp.xDirec, temp.yDirec, temp.size - 25));
+				asteroids.add(new Asteroid(temp.x, temp.y, -temp.xDirec, temp.yDirec, temp.size - 25));//goes opposite direction
 				if(asteroids.size() > 0)//make sure to avoid null index 
 					asteroids.remove(i);
-				asteroids.add(new Asteroid(temp.x, temp.y, temp.xDirec, temp.yDirec, temp.size - 1));
-				asteroids.add(new Asteroid(temp.x, temp.y, -temp.xDirec, temp.yDirec, temp.size - 1));//goes opposite direction
-				p1.pts += (temp.size * 5);
+				p1.pts += 50;
+				hit = false;
 			}
-			
+			else if(hitBar)
+			{
+				asteroids.remove(i);
+				hitBar = false;
+			}
 			else if(temp.x < -50)//left edge
 			{
 				temp.x = temp.y;
@@ -307,14 +316,14 @@ class AnPanel extends JPanel implements Runnable {
 			g.setFont(sFont);//display game
 			g.drawString("# of Asteroids: " + asteroids.size(), 20, 20);
 			g.drawString("Press ESC to quit to menu.", 20, 35);
-			g.drawString("Points: " + pts, 20, 50);
+			g.drawString("Points: " + p1.pts, 20, 50);
 			//g.drawImage(p1.player, p1.xNew, p1.yNew, this);
 			p1.draw(g);//draw player
 			//draw shot
-			if(p1.shot)
-				for(int i = 0; i < p1.bullets.size(); i++)
-					g.fillRect(p1.bullets.get(i).x, p1.bullets.get(i).y, p1.bullets.get(i).width, p1.bullets.get(i).height);
 		}
+		
+		if(gameOver)
+			g.drawString("GAME OVER", 100, 350);
 		
 		for(int i = 0; i < asteroids.size(); i++)
 		{

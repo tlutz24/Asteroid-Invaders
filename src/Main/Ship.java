@@ -58,6 +58,7 @@ public class Ship{
 	public void setLocation(int X, int Y){
 		x = xNew = X;
 		y = yNew = Y;
+		p = new Rectangle(x, y, 30, 30);
 	}
 	
 	public void changeDirec(char direc){
@@ -94,17 +95,23 @@ public class Ship{
 	
 	public void shoot(List<Barrier> barriers)
 	{
+		boolean bulletsNotEmpty, offTop, intersectsBarrier;
 		if(shot)//if bullet has been shot move it 3 pixels up per cycle
 			for(int i = 0; i < bullets.size(); i++)
 			{
 				bullets.get(i).y -= 3;
 				int y = bullets.get(i).y;
 				int x = bullets.get(i).x;
+				bulletsNotEmpty = bullets.size() > 0;
+				offTop = y < -3;
+				
 				for(int j = 0; j < barriers.size(); j++){
 					Barrier b = barriers.get(j);
-					if(bullets.size() > 0 && (y < -3 || (y > b.y && y < b.y + b.height && x > b.x && x < b.x + b.width))){
-						//System.out.println("Removing bullet #" + i + ".");
+					//check next line for logic flaw!!
+					intersectsBarrier = (y > b.y && y < b.y + b.height && x > b.x && x < b.x + b.width);
+					if(bulletsNotEmpty && (offTop || intersectsBarrier)){
 						bullets.remove(i);
+						offTop = false;
 						readyToFire = true;
 					}
 				}
@@ -121,6 +128,10 @@ public class Ship{
 	{
 
 		g.drawImage(player, xNew, yNew, null);
+		if(shot)
+			for(int i = 0; i < bullets.size(); i++)
+				g.fillRect(bullets.get(i).x, bullets.get(i).y, bullets.get(i).width, bullets.get(i).height);
+	
 	}
 	
 }

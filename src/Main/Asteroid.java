@@ -20,18 +20,24 @@ public class Asteroid {
 	Image asteroid;
 	Asteroid(int X, int Y, int xDirection, int yDirection, int Size){
 		try{
+			
 			switch(Size){
-			case(1):
+			case(25):
 					size = 25;
 					asteroid = ImageIO	//attempt to read local files
 							.read(new File("Images/Asteroids/smallAst.png"));
 					break;
-			case(2):
+			case(50):
 					size = 50;
 					asteroid = ImageIO	//attempt to read local files
 							.read(new File("Images/Asteroids/mediumAst.png"));
 					break;
-			case(3):
+			case(75):
+				size = 75;
+				asteroid = ImageIO	//attempt to read local files
+						.read(new File("Images/Asteroids/largeMedAst.png"));
+				break;
+			case(100):
 					size = 100;
 					asteroid = ImageIO	//attempt to read local files
 							.read(new File("Images/Asteroids/largeAst.png"));
@@ -46,6 +52,12 @@ public class Asteroid {
 		xDirec = xDirection;
 		yDirec = yDirection;
 		
+	}
+	
+	public void moveAst(){
+		y += yDirec;
+		x += xDirec;
+		ast = new Rectangle(x, y, size, size);
 	}
 	
 }

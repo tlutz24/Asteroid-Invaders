@@ -25,7 +25,7 @@ public class Ship{
 	int xDirec, yDirec;
 	/**Player points variable*/
 	int pts;
-	protected boolean readyToFire, shot = false;
+	protected boolean readyToFire, dead, shot = false;
 
 	/**Bullet 'x' coordinates*/
 	List<Integer> bX;
@@ -35,7 +35,7 @@ public class Ship{
 	/**Rectangle to represent player*/
 	Rectangle p;
 	
-	Image player;
+	Image player, exploded;
 	
 	//Rectangle bullet;
 	List<Rectangle> bullets = new ArrayList<Rectangle>();
@@ -45,10 +45,12 @@ public class Ship{
 		bY = new ArrayList<Integer>();
 		setLocation(305, 650);
 		changeDirec('s');
+		revive();
 		readyToFire = true;
 		try{
 			player = ImageIO	//attempt to read local files
 					.read(new File("Images/shipSmall.png"));
+			exploded = ImageIO.read(new File("Images/playerExplosion.png"));
 			p = new Rectangle(x, y, 30, 30);
 		}catch(IOException e){
 			player = null;
@@ -59,6 +61,10 @@ public class Ship{
 		x = xNew = X;
 		y = yNew = Y;
 		p = new Rectangle(x, y, 30, 30);
+	}
+	
+	public void revive(){
+		dead = false;
 	}
 	
 	public void changeDirec(char direc){
@@ -126,8 +132,10 @@ public class Ship{
 	
 	public void draw(Graphics g)
 	{
-
-		g.drawImage(player, xNew, yNew, null);
+		if(dead)
+			g.drawImage(exploded, xNew, yNew, null);
+		else
+			g.drawImage(player, xNew, yNew, null);
 		if(shot)
 			for(int i = 0; i < bullets.size(); i++)
 				g.fillRect(bullets.get(i).x, bullets.get(i).y, bullets.get(i).width, bullets.get(i).height);

@@ -61,6 +61,8 @@ class AnPanel extends JPanel implements Runnable {
 	/**Font for statistics in game*/
 	Font sFont = new Font("Monospaced", Font.ITALIC, 15);
 	
+	Font gameO = new Font("Monospaced", Font.ITALIC | Font.BOLD, 75);
+	
 	/**Constructor for class
 	 * 
 	 */
@@ -96,6 +98,7 @@ class AnPanel extends JPanel implements Runnable {
 	public void resetGame(){
 		gameOver = false;
 		p1.setLocation(305, 650);//set initial position
+		p1.revive();
 		createAst = false;
 		astGenSpeed = 250;
 		setBarriers(4, 3);
@@ -119,7 +122,10 @@ class AnPanel extends JPanel implements Runnable {
 		try{
 			while(true)
 			{
-				astGenSpeed = 250;
+				if(250 - p1.pts >= 50)
+					astGenSpeed = 250 - p1.pts;
+				//test above code for correctness
+				
 				//draw player
 				movePlyr();
 				//handle shots
@@ -169,13 +175,13 @@ class AnPanel extends JPanel implements Runnable {
 		}
 		else 
 		{
-			if ((p1.yDirec == -1) && (title || p1.yNew < 550))
+			if ((p1.yDirec == -1) && (gameOver || title || p1.yNew < 550))
 				p1.yDirec = 0;//cancel move if not allowed
-			if ((p1.xDirec == -1) && (title || p1.xNew < 0))
+			if ((p1.xDirec == -1) && (gameOver || title || p1.xNew < 0))
 				p1.xDirec = 0;
-			if ((p1.yDirec == 1) && (title || p1.yNew+30 > getSize().height))
+			if ((p1.yDirec == 1) && (gameOver || title || p1.yNew+30 > getSize().height))
 				p1.yDirec = 0;
-			if ((p1.xDirec == 1) && (title || p1.xNew+30 > getSize().width))
+			if ((p1.xDirec == 1) && (gameOver || title || p1.xNew+30 > getSize().width))
 				p1.xDirec = 0;
 			//move player
 			p1.xNew += (4*p1.xDirec);
@@ -204,7 +210,7 @@ class AnPanel extends JPanel implements Runnable {
 		int x, size, y, xDirec, yDirec;
 		x = rnd.nextInt(650);
 		size = (rnd.nextInt(3)+1) * 25;
-		y = -25*size;
+		y = -size;
 		xDirec = rnd.nextInt(6) - 3;
 		yDirec = rnd.nextInt(2) + 1;
 		asteroids.add(new Asteroid(x, y, xDirec, yDirec, size));
@@ -228,17 +234,19 @@ class AnPanel extends JPanel implements Runnable {
 				{
 					hit = true;
 					p1.bullets.remove(j);
+					break;
 				}
 				else 
 					hit = false;
 			
 			for(int j = 0; j < barriers.size(); j++)
 			{
-				if(barriers.get(i).fullBarrier.intersects(temp.ast))
+				if(barriers.get(j).fullBarrier.intersects(temp.ast))
 				{
 					hitBar = true;
 					//for(int k = 0; k < temp.size; k+=25)
-						barriers.get(i).hit();
+						barriers.get(j).hit();
+						break;
 				}
 				else
 					hitBar = false;
@@ -247,6 +255,13 @@ class AnPanel extends JPanel implements Runnable {
 			if(temp.y > 750 && asteroids.size() > 0)//bottom edge
 			{
 				asteroids.remove(i);
+				createAsteroids();
+			}
+			else if(temp.ast.intersects(p1.p) && asteroids.size() > 0){
+				asteroids.remove(i);
+				gameOver = true;
+				p1.dead = true;
+				createAst = !createAst;
 			}
 			else if(hit)
 			{
@@ -268,7 +283,8 @@ class AnPanel extends JPanel implements Runnable {
 				temp.x = temp.y;
 				temp.y = -50;
 				temp.xDirec *= -1;
-				temp.yDirec ++;
+				if(astGenSpeed <= 50)
+					temp.yDirec ++;
 				
 			}
 			else if(temp.x > 640)//right edge
@@ -276,7 +292,8 @@ class AnPanel extends JPanel implements Runnable {
 				temp.x = temp.y;
 				temp.y = -50;
 				temp.xDirec *= -1;
-				temp.yDirec ++;
+				if(astGenSpeed <= 50)
+					temp.yDirec ++;
 			}
 			
 		}
@@ -308,22 +325,24 @@ class AnPanel extends JPanel implements Runnable {
 			g.setFont(tFont);//display Menu text
 			g.drawString("Asteroid Invaders!", 90, 150);
 			g.drawString("Press Enter to Start!", 50, 350);
-			//g.drawImage(p1.player, p1.xNew, p1.yNew, this);
 			p1.draw(g);
 		}
 		else
 		{
 			g.setFont(sFont);//display game
-			g.drawString("# of Asteroids: " + asteroids.size(), 20, 20);
-			g.drawString("Press ESC to quit to menu.", 20, 35);
-			g.drawString("Points: " + p1.pts, 20, 50);
-			//g.drawImage(p1.player, p1.xNew, p1.yNew, this);
-			p1.draw(g);//draw player
-			//draw shot
+			g.drawString("Generate Asteroids at " + astGenSpeed + " cycles.", 20, 10);
+			g.drawString("# of Asteroids: " + asteroids.size(), 20, 25);
+			g.drawString("Press ESC to quit to menu.", 20, 40);
+			g.drawString("Points: " + p1.pts, 20, 55);
+			
+			p1.draw(g);//draw player and bullets
 		}
 		
 		if(gameOver)
-			g.drawString("GAME OVER", 100, 350);
+		{
+			g.setFont(gameO);
+			g.drawString("GAME OVER", 120, 350);
+		}
 		
 		for(int i = 0; i < asteroids.size(); i++)
 		{
@@ -347,7 +366,10 @@ class AnPanel extends JPanel implements Runnable {
 			if(keys == KeyEvent.VK_D)//move right
 				p1.changeDirec('r');
 			if(keys == KeyEvent.VK_ENTER)//play game
+			{
 				title = false;
+				createAst = !createAst;
+			}
 			if(keys == KeyEvent.VK_ESCAPE)//end game
 				title = true;
 			if(keys == KeyEvent.VK_SPACE){//shoot

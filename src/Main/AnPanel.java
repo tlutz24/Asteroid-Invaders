@@ -41,6 +41,10 @@ class AnPanel extends JPanel implements Runnable {
 	protected Image img, backImg, buff;//ship and background image
 	/**Boolean variables for game flow control*/
 	protected boolean title, gameOver, createAst, readyToFire, shot = false;
+	/* */
+	protected boolean running = false;
+	
+	private Thread th1;
 	/**Random machine for asteroids*/
 	Random rnd;
 	/**String to hold game playing info*/
@@ -90,8 +94,8 @@ class AnPanel extends JPanel implements Runnable {
 		resetGame();
 		//p = new Rectangle(xNew, yNew, 30, 30);
 		//create thread and start it
-		Thread th1 = new Thread(this);
-		th1.start();
+		//Thread th1 = new Thread(this);
+		start();
 		
 	}
 	
@@ -115,33 +119,74 @@ class AnPanel extends JPanel implements Runnable {
 			barriers.add(bar);
 		}
 	}
-	
+	// synchronized is used in order to ensure the thread is executed properly
+	//starts thread here instead of inside of the constructor
+		public synchronized void start() {
+
+			if (running) {
+				return;
+			} else {
+				running = true;
+
+				th1 = new Thread(this);
+				th1.start();
+			}
+		}
 	@Override
 	public void run() {
 		int count = 0;
 		try{
-			while(true)
-			{
-				if(250 - p1.pts >= 50)
-					astGenSpeed = 250 - p1.pts;
-				//test above code for correctness
+			
+			int fps = 60;
+			//converting nano seconds
+			double timePerTick = 1000000000/fps;
+			double delta = 0;
+			long now;
+			//return system time in nano seconds
+			long lastTime = System.nanoTime();
+			long timer = 0;
+			int ticks = 0;
+			//better game loop that runs at a constant 60fps 
+			while (running) {
+				now = System.nanoTime();
+				//amount of time past since we last called this code
+				//then divide by the maximum amount of allowed time
+				delta+=(now - lastTime)/timePerTick;
+				//fps counter
+				timer += now - lastTime;
 				
-				//draw player
-				movePlyr();
-				//handle shots
-				p1.shoot(barriers);
-				//create asteroid
-				if(count == astGenSpeed){
-					count = 0;
-					if(createAst)
-						createAsteroids();
+				lastTime = now;
+				
+				if(delta >= 1) {
+					//code from the past loop to run the game
+					if(250 - p1.pts >= 50)
+						astGenSpeed = 250 - p1.pts;
+					//test above code for correctness
+					
+					//draw player
+					movePlyr();
+					//handle shots
+					p1.shoot(barriers);
+					//create asteroid
+					if(count == astGenSpeed){
+						count = 0;
+						if(createAst)
+							createAsteroids();
+					}
+					//move or remove asteroids
+					handleAsteroids();
+					
+					ticks++;
+					delta--;
+					count++;
 				}
-				//move or remove asteroids
-				handleAsteroids();
+				//displays the fps counter in the console, which is locked at 60
+				if (timer >= 1000000000) {
+					System.out.println("Ticks and Frames: " + ticks);
+					ticks = 0;
+					timer = 0;
+				}
 				
-				//set speed of animation
-				Thread.sleep(15);//lower = faster while higher = slower
-				count++;
 			}
 		}
 		catch(Exception e)
@@ -150,6 +195,21 @@ class AnPanel extends JPanel implements Runnable {
 			System.out.println("Error at run: "+ e.toString());
 		}	
 	}
+	//proper stop method for when the program ends to stop the thread
+	public synchronized void stop() {
+		if (running == false) {
+			return;
+		} else {
+			running = false;
+			try {
+				th1.join();
+			} catch (InterruptedException e) {
+
+				e.printStackTrace();
+			}
+		}
+	}
+
 
 	public void movePlyr() {
 		//check if move is allowed

@@ -99,6 +99,7 @@ class AnPanel extends JPanel implements Runnable {
 		gameOver = false;
 		p1.setLocation(305, 650);//set initial position
 		p1.revive();
+		p1.pts = 0;
 		createAst = false;
 		astGenSpeed = 250;
 		setBarriers(4, 3);
@@ -122,8 +123,8 @@ class AnPanel extends JPanel implements Runnable {
 		try{
 			while(true)
 			{
-				if(250 - p1.pts >= 50)
-					astGenSpeed = 250 - p1.pts;
+				if(astGenSpeed >= 50)
+					astGenSpeed -= p1.pts;
 				//test above code for correctness
 				
 				//draw player

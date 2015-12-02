@@ -65,6 +65,8 @@ public class Ship{
 	
 	public void revive(){
 		dead = false;
+		setLocation(305, 650);
+		pts = 0;
 	}
 	
 	public void changeDirec(char direc){
@@ -87,15 +89,18 @@ public class Ship{
 	}
 	
 	public void addBullet(){
-		if(bullets.size() > 50)
-			readyToFire = false;
-		else{
-			int y = yNew;
-			int x = xNew + 15;
-			bY.add(y);
-			bX.add(x);
-			bullets.add(new Rectangle(x, y, 3, 3));
-			shot = true;
+		if(readyToFire)
+		{
+			if(bullets.size() > 50)
+				readyToFire = false;
+			else{
+				int y = yNew;
+				int x = xNew + 15;
+				bY.add(y);
+				bX.add(x);
+				bullets.add(new Rectangle(x, y, 3, 3));
+				shot = true;
+			}
 		}
 	}
 	
@@ -136,7 +141,7 @@ public class Ship{
 			g.drawImage(exploded, xNew, yNew, null);
 		else
 			g.drawImage(player, xNew, yNew, null);
-		if(shot)
+		if(shot && !dead)
 			for(int i = 0; i < bullets.size(); i++)
 				g.fillRect(bullets.get(i).x, bullets.get(i).y, bullets.get(i).width, bullets.get(i).height);
 	

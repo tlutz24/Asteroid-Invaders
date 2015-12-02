@@ -23,10 +23,6 @@ import javax.swing.JPanel;
 class AnPanel extends JPanel implements Runnable {
 	/**Graphics object used to draw game*/
 	private Graphics gImg;
-	/**Player position and variables*/
-//	int x, y, xNew, yNew;
-	/**Player movement direction variables*/
-//	int xDirec, yDirec;
 	/**Player points variable*/
 	int pts;
 	/**Asteroid generation speed variable*/
@@ -41,17 +37,12 @@ class AnPanel extends JPanel implements Runnable {
 	protected Image img, backImg, buff;//ship and background image
 	/**Boolean variables for game flow control*/
 	protected boolean title, gameOver, createAst, readyToFire, shot = false;
-	/* */
+	
 	protected boolean running = false;
 	
 	private Thread th1;
 	/**Random machine for asteroids*/
 	Random rnd;
-	/**String to hold game playing info*/
-//	String info;
-	
-	/**Rectangle to represent player*/
-	//Rectangle p;
 	
 	Ship p1;
 	
@@ -72,7 +63,6 @@ class AnPanel extends JPanel implements Runnable {
 	 */
 	AnPanel() {
 		super();
-//		xDirec = yDirec = 0;//no movement at start
 		pts = 0;//player points
 		title = true;//open game menu
 		rnd = new Random();
@@ -82,7 +72,6 @@ class AnPanel extends JPanel implements Runnable {
 		barriers = new ArrayList<Barrier>();
 		bullets = new ArrayList<Rectangle>();
 		try {
-			//img = ImageIO.read(new File("Images/shipSmall.png"));
 			backImg = ImageIO
 					.read(new File("Images/Asteroids-Background.png"));
 		} catch (IOException e) {
@@ -92,18 +81,14 @@ class AnPanel extends JPanel implements Runnable {
 		this.setFocusable(true);
 		p1 = new Ship();
 		resetGame();
-		//p = new Rectangle(xNew, yNew, 30, 30);
-		//create thread and start it
-		//Thread th1 = new Thread(this);
 		start();
 		
 	}
 	
 	public void resetGame(){
 		gameOver = false;
-		p1.setLocation(305, 650);//set initial position
+		//set initial position
 		p1.revive();
-		p1.pts = 0;
 		createAst = false;
 		astGenSpeed = 250;
 		setBarriers(4, 3);
@@ -120,30 +105,31 @@ class AnPanel extends JPanel implements Runnable {
 			barriers.add(bar);
 		}
 	}
+	
 	// synchronized is used in order to ensure the thread is executed properly
 	//starts thread here instead of inside of the constructor
-		public synchronized void start() {
+	public synchronized void start() {
 
-			if (running) {
-				return;
-			} else {
-				running = true;
+		if (running) {
+			return;
+		} else {
+			running = true;
 
-				th1 = new Thread(this);
-				th1.start();
-			}
+			th1 = new Thread(this);
+			th1.start();
 		}
+	}
+	
 	@Override
 	public void run() {
 		int count = 0;
 		try{
-//<<<<<<< HEAD
 			while(true)
 			{
-				if(astGenSpeed >= 50)
+				if(astGenSpeed >= 100)
 					astGenSpeed -= p1.pts;
-				//test above code for correctness
-//=======
+				else
+					astGenSpeed = 100;
 			
 			int fps = 60;
 			//converting nano seconds
@@ -164,7 +150,6 @@ class AnPanel extends JPanel implements Runnable {
 				timer += now - lastTime;
 				
 				lastTime = now;
-//>>>>>>> origin/master
 				
 				if(delta >= 1) {
 					//code from the past loop to run the game
@@ -205,6 +190,7 @@ class AnPanel extends JPanel implements Runnable {
 			System.out.println("Error at run: "+ e.toString());
 		}	
 	}
+	
 	//proper stop method for when the program ends to stop the thread
 	public synchronized void stop() {
 		if (running == false) {
@@ -223,10 +209,9 @@ class AnPanel extends JPanel implements Runnable {
 
 	public void movePlyr() {
 		//check if move is allowed
-		//p.setLocation(xNew, yNew);
-		p1.setLocation(p1.xNew, p1.yNew);//necessary?
+		p1.setLocation(p1.xNew, p1.yNew);//necessary? - yes - the only reason player collision detection works
 		
-		if(detectCollide())
+		if(detectCollide())//player collision with barrier
 		{
 			//prevent player from moving into barrier
 			
@@ -243,20 +228,17 @@ class AnPanel extends JPanel implements Runnable {
 			p1.yNew += (4*p1.yDirec);
 			
 		}
-		else 
-		{
-			if ((p1.yDirec == -1) && (gameOver || title || p1.yNew < 550))
-				p1.yDirec = 0;//cancel move if not allowed
-			if ((p1.xDirec == -1) && (gameOver || title || p1.xNew < 0))
-				p1.xDirec = 0;
-			if ((p1.yDirec == 1) && (gameOver || title || p1.yNew+30 > getSize().height))
-				p1.yDirec = 0;
-			if ((p1.xDirec == 1) && (gameOver || title || p1.xNew+30 > getSize().width))
-				p1.xDirec = 0;
-			//move player
-			p1.xNew += (4*p1.xDirec);
-			p1.yNew += (4*p1.yDirec);
-		}
+		//detect reason to prevent y move
+		else if ((p1.yDirec == -1 && p1.yNew < 550)||(p1.yDirec == 1 && p1.yNew+30 > getSize().height)||(gameOver || title ))
+			p1.yDirec = 0;
+		//detect reason to prevent x move
+		else if((p1.xDirec == -1 && p1.xNew < 0)||(p1.xDirec == 1 && p1.xNew+30 > getSize().width)||(gameOver || title ))
+			p1.xDirec = 0;
+		
+
+		//move player
+		p1.xNew += (4*p1.xDirec);
+		p1.yNew += (4*p1.yDirec);
 		p1.x = p1.xNew;
 		p1.y = p1.yNew;
 	}
@@ -266,11 +248,12 @@ class AnPanel extends JPanel implements Runnable {
 	 * @return 
 	 */
 	public boolean detectCollide(){
-		//handle intersections with barriers
-		Rectangle bar;
+		//handle player intersections with barriers
+		Barrier bar;
+		
 		for(int i = 0; i < barriers.size(); i++){
-			bar = barriers.get(i).fullBarrier;
-			if(p1.p.intersects(bar))
+			bar = barriers.get(i);
+			if(bar.isHit(p1.p) != -1)
 				return true;
 		}
 		return false;
@@ -287,68 +270,18 @@ class AnPanel extends JPanel implements Runnable {
 	}
 	
 	/**Creates asteroids and handles moving them and eventually removing them
-	 * 
+	 * seems to have minor errors - does not always remove ast 
+	 * could use more work to remove a proper amount of the barrier
 	 */
 	public void handleAsteroids(){
-		boolean hit, hitBar;
-		hit = hitBar = false;
-		
+		boolean removed = false;
 		Asteroid temp;
-		for(int i = 0; i < asteroids.size(); i++)//move active asteroids
+		for(int i = 0; i < asteroids.size(); i++)
 		{
-			temp = asteroids.get(i);
-			temp.moveAst();
+			temp = asteroids.get(i);//set temp to current asteroid
+			temp.moveAst();//move active asteroids
 			
-			for(int j = 0; j < p1.bullets.size(); j++)
-				if(p1.bullets.get(j).intersects(temp.ast))
-				{
-					hit = true;
-					p1.bullets.remove(j);
-					break;
-				}
-				else 
-					hit = false;
-			
-			for(int j = 0; j < barriers.size(); j++)
-			{
-				if(barriers.get(j).fullBarrier.intersects(temp.ast))
-				{
-					hitBar = true;
-					//for(int k = 0; k < temp.size; k+=25)
-						barriers.get(j).hit();
-						break;
-				}
-				else
-					hitBar = false;
-			}
-					
-			if(temp.y > 750 && asteroids.size() > 0)//bottom edge
-			{
-				asteroids.remove(i);
-				createAsteroids();
-			}
-			else if(temp.ast.intersects(p1.p) && asteroids.size() > 0){
-				asteroids.remove(i);
-				gameOver = true;
-				p1.dead = true;
-				createAst = !createAst;
-			}
-			else if(hit)
-			{
-				//delete current asteroid and create two smaller ones going opposite directions from same place
-				asteroids.add(new Asteroid(temp.x, temp.y, temp.xDirec, temp.yDirec, temp.size - 25));
-				asteroids.add(new Asteroid(temp.x, temp.y, -temp.xDirec, temp.yDirec, temp.size - 25));//goes opposite direction
-				if(asteroids.size() > 0)//make sure to avoid null index 
-					asteroids.remove(i);
-				p1.pts += 50;
-				hit = false;
-			}
-			else if(hitBar)
-			{
-				asteroids.remove(i);
-				hitBar = false;
-			}
-			else if(temp.x < -50)//left edge
+			if(temp.x < -50)//asteroid hits left edge
 			{
 				temp.x = temp.y;
 				temp.y = -50;
@@ -357,7 +290,8 @@ class AnPanel extends JPanel implements Runnable {
 					temp.yDirec ++;
 				
 			}
-			else if(temp.x > 640)//right edge
+			
+			if(temp.x > 640)//asteroid hits right edge
 			{
 				temp.x = temp.y;
 				temp.y = -50;
@@ -365,7 +299,50 @@ class AnPanel extends JPanel implements Runnable {
 				if(astGenSpeed <= 50)
 					temp.yDirec ++;
 			}
+					
+			if(!removed && temp.y > 750 && asteroids.size() > 0)//asteroid hits bottom edge
+			{
+				asteroids.remove(i);
+				removed = true;
+				createAsteroids();
+			}
 			
+			if(!removed && temp.ast.intersects(p1.p) && asteroids.size() > 0)//asteroid collides with player
+			{
+				asteroids.remove(i);
+				removed = true;
+				gameOver = true;
+				p1.dead = true;
+				createAst = !createAst;
+			}
+			
+			for(int j = 0; j < p1.bullets.size(); j++)//loop to detect bullet collision with asteroid
+				if(!removed && p1.bullets.get(j).intersects(temp.ast))//bullet collides with asteroid
+				{
+					p1.bullets.remove(j);
+					//delete current asteroid and create two smaller ones going opposite directions from same place
+					asteroids.add(new Asteroid(temp.x, temp.y, temp.xDirec, temp.yDirec, temp.size - 25));
+					asteroids.add(new Asteroid(temp.x, temp.y, -temp.xDirec, temp.yDirec, temp.size - 25));//goes opposite direction
+					if(asteroids.size() > 0)//make sure to avoid null index 
+					{
+						asteroids.remove(i);
+						removed = true;
+					}
+					p1.pts += 10;
+					break;
+				}
+			
+			for(int j = 0; j < barriers.size(); j++)//loop to detect asteroid collision with barrier
+			{
+				int barrierHitIndex = barriers.get(j).isHit(temp.ast);//index of barrier hit
+				
+				if(!removed && barrierHitIndex != -1)//if index isn't out of bounds
+				{
+						asteroids.remove(i);//remove asteroid
+						removed = true;
+						barriers.get(j).hit(barrierHitIndex);//remove barrier hit
+				}
+			}
 		}
 	}
 	
@@ -385,7 +362,7 @@ class AnPanel extends JPanel implements Runnable {
 		//draw barriers
 		g.setColor(Color.red);
 		for(int i = 0; i < barriers.size(); i++)
-			g.fillRect(barriers.get(i).x, barriers.get(i).y, barriers.get(i).width, barriers.get(i).height);
+			barriers.get(i).draw(g);
 		
 		//display title menu or game
 		g.setColor(Color.WHITE);
@@ -438,22 +415,12 @@ class AnPanel extends JPanel implements Runnable {
 			if(keys == KeyEvent.VK_ENTER)//play game
 			{
 				title = false;
-				createAst = !createAst;
+				createAst = true;
 			}
 			if(keys == KeyEvent.VK_ESCAPE)//end game
 				title = true;
-			if(keys == KeyEvent.VK_SPACE){//shoot
-				if(p1.readyToFire)
-				{
-					p1.addBullet();
-					shot = true;
-				}
-			}
-			if(keys == KeyEvent.VK_H)
-				for(int i = 0; i < 4; i++)
-					barriers.get(i).hit();
-			if(keys == KeyEvent.VK_P)
-				createAst = !createAst;//invert state
+			if(keys == KeyEvent.VK_SPACE)//shoot
+				p1.addBullet();
 			if(keys == KeyEvent.VK_UP)
 				astGenSpeed -= 50;
 			if(keys == KeyEvent.VK_DOWN)

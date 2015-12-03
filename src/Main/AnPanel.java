@@ -41,6 +41,9 @@ class AnPanel extends JPanel implements Runnable {
 	protected boolean running = false;
 	
 	private Thread th1;
+	
+	private int time;
+	
 	/**Random machine for asteroids*/
 	Random rnd;
 	
@@ -90,6 +93,7 @@ class AnPanel extends JPanel implements Runnable {
 		//set initial position
 		p1.revive();
 		createAst = false;
+		time = 0;
 		astGenSpeed = 250;
 		setBarriers(4, 3);
 		while(asteroids.size() > 0)
@@ -153,10 +157,7 @@ class AnPanel extends JPanel implements Runnable {
 				
 				if(delta >= 1) {
 					//code from the past loop to run the game
-					if(250 - p1.pts >= 50)
-						astGenSpeed = 250 - p1.pts;
-					//test above code for correctness
-					
+										
 					//draw player
 					movePlyr();
 					//handle shots
@@ -179,6 +180,12 @@ class AnPanel extends JPanel implements Runnable {
 					System.out.println("Ticks and Frames: " + ticks);
 					ticks = 0;
 					timer = 0;
+					if(!title && !gameOver){
+						time++;
+						System.out.println("Time is " + time);
+						if(astGenSpeed > 100)
+							astGenSpeed -= time;
+					}
 				}
 				
 			}
@@ -188,6 +195,7 @@ class AnPanel extends JPanel implements Runnable {
 		{
 			e.printStackTrace();
 			System.out.println("Error at run: "+ e.toString());
+			
 		}	
 	}
 	
@@ -286,7 +294,7 @@ class AnPanel extends JPanel implements Runnable {
 				temp.x = temp.y;
 				temp.y = -50;
 				temp.xDirec *= -1;
-				if(astGenSpeed <= 50)
+				if(astGenSpeed <= 100)
 					temp.yDirec ++;
 				
 			}
@@ -296,7 +304,7 @@ class AnPanel extends JPanel implements Runnable {
 				temp.x = temp.y;
 				temp.y = -50;
 				temp.xDirec *= -1;
-				if(astGenSpeed <= 50)
+				if(astGenSpeed <= 100)
 					temp.yDirec ++;
 			}
 					
@@ -341,6 +349,7 @@ class AnPanel extends JPanel implements Runnable {
 						asteroids.remove(i);//remove asteroid
 						removed = true;
 						barriers.get(j).hit(barrierHitIndex);//remove barrier hit
+						break;
 				}
 			}
 		}

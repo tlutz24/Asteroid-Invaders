@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 
  * @author Tyler
- *TODO: make barriers more complex - maybe composed of 10-20px blocks
+ *
  */
 
 public class Barrier{
@@ -18,14 +18,10 @@ public class Barrier{
 	Barrier(int x1, int y1, int strength){
 		x = x1;
 		y = y1;
-		width = 75;
-		height = strength * 10;
-		for(int i = 0; i < strength; i++)
-			barrier.add(new Rectangle(x, y + 10*i, width, 10));
-		fullBarrier = new Rectangle(x, y, width, height);
+		width = height = strength;
 		
-		for(int i = 0; i < 3; i++)
-			for(int j = 0; j < 3; j++)
+		for(int i = 0; i < width; i++)
+			for(int j = 0; j < strength; j++)
 				barrier.add(new Rectangle(x+25*i, y+10*j, 25, 10));
 		
 	}
@@ -39,7 +35,6 @@ public class Barrier{
 	public void hit(int i){
 		if(barrier.size() > 0)
 			barrier.remove(i);
-		//fullBarrier = new Rectangle(x, y, width, height);
 	}	
 	public void draw(Graphics g){
 		Rectangle temp;

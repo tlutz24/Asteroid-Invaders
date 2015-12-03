@@ -110,21 +110,36 @@ public class Ship{
 		if(shot)//if bullet has been shot move it 3 pixels up per cycle
 			for(int i = 0; i < bullets.size(); i++)
 			{
+				
 				bullets.get(i).y -= 3;
 				int y = bullets.get(i).y;
 				int x = bullets.get(i).x;
 				bulletsNotEmpty = bullets.size() > 0;
 				offTop = y < -3;
-				
-				for(int j = 0; j < barriers.size(); j++){
+				bulletsNotEmpty = bullets.size() > 0;
+				offTop = y < -3;
+				for(int j = 0; j < barriers.size(); j++)
+				{
+					
 					Barrier b = barriers.get(j);
-					//check next line for logic flaw!!
-					intersectsBarrier = (y > b.y && y < b.y + b.height && x > b.x && x < b.x + b.width);
-					if(bulletsNotEmpty && (offTop || intersectsBarrier)){
+					int barrierHitIndex = b.isHit(bullets.get(i));
+					intersectsBarrier = barrierHitIndex != -1;
+					if(bulletsNotEmpty && intersectsBarrier)
+					{
+						//remove barrier
+						bullets.remove(i);
+						readyToFire = true;
+						b.hit(barrierHitIndex);
+						break;
+					}
+					if(bulletsNotEmpty && offTop)
+					{
 						bullets.remove(i);
 						offTop = false;
 						readyToFire = true;
+						break;
 					}
+				
 				}
 			}
 		if(bullets.size() == 0)//detect bullets leaving screen and reset shot

@@ -11,6 +11,9 @@ import javax.swing.JFrame;
  */
 public class AnimationFrame extends JFrame {
 
+	/**
+	 * Constructor for class
+	 */
 	AnimationFrame()  {
 		super ("Asteroid Invaders!");//set title of frame
 		this.setSize(640, 750);//set game size
@@ -26,6 +29,10 @@ public class AnimationFrame extends JFrame {
 		
 	}
 	
+	/**
+	 * main function to begin game
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		AnimationFrame frame = new AnimationFrame();

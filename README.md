@@ -15,3 +15,6 @@ Most of the code for GUI was learned from the following youTube video playlist
 ~This was just my first stab at it, if you guys have a different idea for moving forward start a new branch and post it~
 ~to the github so we can all see and compare our visions for the game dev~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Data Base Link: http://stackoverflow.com/questions/876143/eclipse-mysql-integration-plugins

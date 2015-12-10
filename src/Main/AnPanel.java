@@ -718,13 +718,13 @@ class AnPanel extends JPanel implements Runnable {
 		public void keyPressed(KeyEvent key) {
 			int keys = key.getKeyCode();
 			
-			if(keys == KeyEvent.VK_W)//move up
+			if(keys == KeyEvent.VK_W || keys == KeyEvent.VK_UP)//move up
 				p1.changeDirec('u');
-			if(keys == KeyEvent.VK_A)//move left
+			if(keys == KeyEvent.VK_A || keys == KeyEvent.VK_LEFT)//move left
 				p1.changeDirec('l');
-			if(keys == KeyEvent.VK_S)//move down
+			if(keys == KeyEvent.VK_S || keys == KeyEvent.VK_DOWN)//move down
 				p1.changeDirec('d');
-			if(keys == KeyEvent.VK_D)//move right
+			if(keys == KeyEvent.VK_D || keys == KeyEvent.VK_RIGHT)//move right
 				p1.changeDirec('r');
 			if(keys == KeyEvent.VK_ENTER)//play game
 			{
@@ -740,8 +740,9 @@ class AnPanel extends JPanel implements Runnable {
 				PlaySound(Shoot);
 			}
 			if(keys == KeyEvent.VK_UP)
+			if(keys == KeyEvent.VK_F1)
 				astGenSpeed -= 50;
-			if(keys == KeyEvent.VK_DOWN)
+			if(keys == KeyEvent.VK_F2)
 				astGenSpeed += 50;
 				
 		}
@@ -749,13 +750,13 @@ class AnPanel extends JPanel implements Runnable {
 		 public void keyReleased(KeyEvent key) {	
 			 int keys = key.getKeyCode();
 			 //reset direction to 0 when key is released
-				if(keys == KeyEvent.VK_W)
+			 	if(keys == KeyEvent.VK_W || keys == KeyEvent.VK_UP)
 					p1.yDirec = 0;
-				if(keys == KeyEvent.VK_A)
+			 	if(keys == KeyEvent.VK_A || keys == KeyEvent.VK_LEFT)
 					p1.xDirec = 0;
-				if(keys == KeyEvent.VK_S)
+			 	if(keys == KeyEvent.VK_S || keys == KeyEvent.VK_DOWN)
 					p1.yDirec = 0;
-				if(keys == KeyEvent.VK_D)
+			 	if(keys == KeyEvent.VK_D || keys == KeyEvent.VK_RIGHT)
 					p1.xDirec = 0;
 				if(keys == KeyEvent.VK_SPACE)
 				{

@@ -141,7 +141,7 @@ public class Ship{
 	 * 
 	 * @param barriers		list of barriers on the game board - used to detect collisions
 	 */
-	public void shoot(List<Barrier> barriers)
+	public boolean shoot(List<Barrier> barriers)
 	{
 		//boolean variables to help readability of code
 		boolean bulletsNotEmpty, offTop, intersectsBarrier;
@@ -179,7 +179,7 @@ public class Ship{
 						readyToFire = true;
 						//remove bits of barrier hit by bullet
 						b.hit(barrierHitIndex);
-						break;
+						return true;
 					}
 					//if bullet goes off the top of the screen and the bullet list isn't empty
 					if(bulletsNotEmpty && offTop)
@@ -201,7 +201,7 @@ public class Ship{
 				shot = false;
 				readyToFire = true;
 			}
-		
+		return false;
 	}
 	
 	/**

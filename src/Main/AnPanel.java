@@ -10,17 +10,84 @@ import java.awt.Rectangle;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.IOException;
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
+import java.sql.*;
 
 /**
  * @author Dylan Steele
  * @author Tyler Lutz
- * 
+ * @author Jason Liu
  *
  */
 class AnPanel extends JPanel implements Runnable {
+	
+	/**
+	 * Files for sounds and method to play file objects
+	 */
+	// Sound effect for ship hit on barrier
+	File Bounce = new File ("SoundEffects/Bounce.WAV");
+	// Sound effect for Ship collision
+	File ShipExplode = new File("SoundEffects/ShipExplosion.WAV");
+	// Sound effect for Asteroid collision
+	File AsteroidExplode = new File("SoundEffects/AsteroidsExplosion.WAV");
+	// Sound effect for Barrier collision
+	File BarrierHit = new File("SoundEffects/HitOnBarrier.WAV"); 
+	// Sound effect for Barrier collision
+	File Click = new File("SoundEffects/Click.WAV"); 
+	//Sound effect for player shot
+	File Shoot = new File("SoundEffects/Laser_Shoot.WAV");
+
+	/*
+	//background music?
+	// This method take the wav file and play it. Problem is that it will not stop until the end of the song, we need to 
+	// figure out a way to stop it playing when we need to do that. And it only plays once, but that would be easy to fix
+	public void music()
+	{
+		AudioPlayer MGP = AudioPlayer.player;
+		AudioStream BGM;
+		
+	try{
+		//BGM = new AudioStream(new FileInputStream("SoundEffects/titleBGM.wav"));
+		//MD = BGM.getData();
+		//loop = new ContinuousAudioDataStream(MD);
+		
+	
+		  InputStream test = new FileInputStream("SoundEffects/titleBGM.wav");
+          BGM = new AudioStream(test);
+          AudioPlayer.player.start(BGM);
+          
+        
+		}  catch(FileNotFoundException e){
+            System.out.print(e);
+        }	
+		catch(IOException error){
+			System.out.println(error);
+		}		
+	}
+	*/
+	
+	/**
+	 * Method to play sound clips for game-play sound effects
+	 * 
+	 * @param Sound		sound file to load into audio system
+	 */
+	public void PlaySound(File Sound)
+
+	{
+		try{
+			Clip clip = AudioSystem.getClip();
+			clip.open(AudioSystem.getAudioInputStream(Sound));
+			clip.start();	
+		}catch(Exception e){
+			System.out.println(e);
+		}
+	}
+	
 	/**Graphics object used to draw game*/
 	private Graphics gImg;
 	/**Player points variable*/
@@ -46,6 +113,8 @@ class AnPanel extends JPanel implements Runnable {
 	
 	private int time;
 	
+	private int count;
+	
 	/**Random machine for asteroids*/
 	Random rnd;
 	
@@ -65,6 +134,83 @@ class AnPanel extends JPanel implements Runnable {
 	Font gameO = new Font("Monospaced", Font.ITALIC | Font.BOLD, 75);
 	
 	/**
+	 * Database variables and Database access functions below
+	 */
+	//JDBC driver string
+	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+	//Database URL
+	static final String DB_URL = "jdbc:mysql://localhost/high score list";/** TODO:look at db url */
+	//User name string
+	static final String USER = "root";
+	//Password string
+	static final String PASS = "";
+	//Connection object
+	Connection connection = null;
+	//Statement object
+	Statement statement = null;
+
+	/**
+	 * Method to open connection with local database
+	 * 
+	 * @throws Exception
+	 */
+	public void connectDatabase() throws Exception {
+		//Register the Driver (step 2)
+		String driverName = "com.mysql.jdbc.Driver";
+	    Class.forName(driverName);
+	    
+ 
+	    //Open connection
+	    System.out.println("Connecting to db...");
+	    connection = DriverManager.getConnection(DB_URL, USER, PASS);
+	    
+	}
+	
+	/**
+	 * Method to add entry to High Score DB
+	 * 
+	 * @param name		String holding player's name
+	 * @param score		int holding player's score
+	 * @param time		int holding player's time alive
+	 */
+	public void addToDB(String name, int score, int time){
+		String command = "INSERT INTO `high score list`.`names, scores, and time` "
+				+ "(`Name`, `Score`, `Time`) VALUES ('" + name + "', '" + score + "', '" + time + "');";
+		//issue command to sql connection
+		try {
+			//Create statement
+			System.out.println("Adding " + name + " to high scores list");
+			statement = connection.createStatement();
+			statement.execute(command);
+			System.out.println("Added " + name + " to the high scores list");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Method to pull info from high score DB and print it to the console
+	 */
+	public void getHighScores(){
+		//query will sort by high score in descending order (highest to lowest)
+		String query = "SELECT * FROM `names, scores, and time` ORDER BY `names, scores, and time`.`Score` DESC";
+		try{
+			statement = connection.createStatement();
+			ResultSet rs = statement.executeQuery(query);
+			while(rs.next()){
+				String name = rs.getString("Name");
+				int score = rs.getInt("Score");
+				int time = rs.getInt("Time");
+				System.out.println(name +" - "+ score +" - "+ time);
+			}
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * Constructor for class
 	 */
 	AnPanel() {
@@ -78,9 +224,10 @@ class AnPanel extends JPanel implements Runnable {
 		barriers = new ArrayList<Barrier>();
 		bullets = new ArrayList<Rectangle>();
 		try {
-			backImg = ImageIO
-					.read(new File("Images/Asteroids-Background.png"));
-		} catch (IOException e) {
+			backImg = ImageIO.read(new File("Images/Asteroids-Background.png"));
+			connectDatabase();
+		} catch (Exception e) {
+			System.out.println(e.toString());
 			backImg = null;
 		}
 		this.addKeyListener(new InputKeyEvents());
@@ -103,8 +250,8 @@ class AnPanel extends JPanel implements Runnable {
 		createAst = false;
 		//restart timer
 		time = 0;
-		//to start - generate asteroid once every 20 seconds
-		astGenSpeed = 12;
+		//to start - generate asteroid once every 12 seconds
+		count = astGenSpeed = 12;
 		//reset asteroid generation cap 
 		astGenCap = 5;
 		//place barriers on game board
@@ -155,7 +302,7 @@ class AnPanel extends JPanel implements Runnable {
 	 */
 	@Override
 	public void run() {
-		int count = 12;
+		
 		try{
 			while(true)
 			{
@@ -212,8 +359,8 @@ class AnPanel extends JPanel implements Runnable {
 					//draw player
 					movePlyr();
 					//handle shots
-					p1.shoot(barriers);
-					
+					if(p1.shoot(barriers))
+						PlaySound(BarrierHit);
 					//move or remove asteroids
 					handleAsteroids();
 					
@@ -399,10 +546,27 @@ class AnPanel extends JPanel implements Runnable {
 			
 			//asteroid collides with player
 			if(!removed && temp.ast.intersects(p1.p) && asteroids.size() > 0 && p1.dead == false){
+				PlaySound(ShipExplode);//Play player explode sound
 				asteroids.remove(i);
 				removed = true;
 				gameOver = true;
 				p1.dead = true;
+				//Prompt the user, asking if they want to add their score to the High Score list
+				int reply = JOptionPane.showConfirmDialog(this, "Would you like to add your score to the High Score list?");
+				if (reply == JOptionPane.YES_OPTION){
+		        	String name = "";
+		        	String in = JOptionPane.showInputDialog("Enter your name (limit - 6 characters):");
+				
+		        	for(int c = 0; c < 6 && c < in.length(); c++)
+		        		name += in.charAt(c);
+		        	addToDB(name, p1.pts, time);
+		        }
+				getHighScores();
+				/**
+				 * TODO:check that name/score/time is added to db
+				 * player is being added properly at the end of each game
+				 */
+				
 				createAst = !createAst;
 			}
 			
@@ -411,6 +575,7 @@ class AnPanel extends JPanel implements Runnable {
 				//bullet collides with asteroid
 				if(!removed && p1.bullets.get(j).intersects(temp.ast))
 				{
+					PlaySound(AsteroidExplode);//Play asteroid explode sound
 					//remove the bullet that intersected
 					p1.bullets.remove(j);
 					//if asteroid is at least medium size
@@ -443,6 +608,8 @@ class AnPanel extends JPanel implements Runnable {
 				//if a barrier was actually hit
 				if(hit != 0)
 				{
+					//Play barrier hit sound
+					PlaySound(BarrierHit);
 					//remove the current asteroid
 					asteroids.remove(i);
 					//remember that asteroid has been removed
@@ -545,7 +712,6 @@ class AnPanel extends JPanel implements Runnable {
 	
 	/**
 	 * 
-	 * @author Tyler
 	 *
 	 */
 	public class InputKeyEvents extends KeyAdapter {
@@ -562,13 +728,17 @@ class AnPanel extends JPanel implements Runnable {
 				p1.changeDirec('r');
 			if(keys == KeyEvent.VK_ENTER)//play game
 			{
+				PlaySound(Click);
 				title = false;
 				createAst = true;
 			}
 			if(keys == KeyEvent.VK_ESCAPE)//end game
 				title = true;
 			if(keys == KeyEvent.VK_SPACE)//shoot
+			{
 				p1.addBullet();
+				PlaySound(Shoot);
+			}
 			if(keys == KeyEvent.VK_UP)
 				astGenSpeed -= 50;
 			if(keys == KeyEvent.VK_DOWN)

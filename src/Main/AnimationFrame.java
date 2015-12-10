@@ -6,7 +6,9 @@ import java.awt.Color;
 import javax.swing.JFrame;
 
 /**
- * @author Dylan Steele, Tyler Lutz
+ * @author Dylan Steele
+ * @author Tyler Lutz
+ * @author Jason Liu
  *
  */
 public class AnimationFrame extends JFrame {

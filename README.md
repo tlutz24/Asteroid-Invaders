@@ -18,3 +18,5 @@ Most of the code for GUI was learned from the following youTube video playlist
 
 
 Data Base Link: http://stackoverflow.com/questions/876143/eclipse-mysql-integration-plugins
+
+Data Base Link for setup: http://www.tutorialspoint.com/jdbc/jdbc-sample-code.htm

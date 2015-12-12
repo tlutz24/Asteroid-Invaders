@@ -193,6 +193,8 @@ class AnPanel extends JPanel implements Runnable {
 	 * Method to pull info from high score DB and print it to the console
 	 */
 	public void getHighScores(){
+		
+		
 		//query will sort by high score in descending order (highest to lowest)
 		String query = "SELECT * FROM `names, scores, and time` ORDER BY `names, scores, and time`.`Score` DESC";
 		try{
@@ -203,11 +205,14 @@ class AnPanel extends JPanel implements Runnable {
 				int score = rs.getInt("Score");
 				int time = rs.getInt("Time");
 				System.out.println(name +" - "+ score +" - "+ time);
+				
+				
 			}
 			
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		
 	}
 	
 	/**
@@ -551,6 +556,7 @@ class AnPanel extends JPanel implements Runnable {
 				removed = true;
 				gameOver = true;
 				p1.dead = true;
+				
 				//Prompt the user, asking if they want to add their score to the High Score list
 				int reply = JOptionPane.showConfirmDialog(this, "Would you like to add your score to the High Score list?");
 				if (reply == JOptionPane.YES_OPTION){
@@ -566,6 +572,12 @@ class AnPanel extends JPanel implements Runnable {
 				 * TODO:check that name/score/time is added to db
 				 * player is being added properly at the end of each game
 				 */
+				
+				/*
+				 * JFrame that will display the High Score Table
+				 */
+				HighScore highScore = new HighScore();
+				
 				
 				createAst = !createAst;
 			}

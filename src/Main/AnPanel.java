@@ -115,6 +115,8 @@ class AnPanel extends JPanel implements Runnable {
 	
 	private int count;
 	
+	private char difficulty;
+	
 	/**Random machine for asteroids*/
 	Random rnd;
 	
@@ -198,12 +200,14 @@ class AnPanel extends JPanel implements Runnable {
 		//query will sort by high score in descending order (highest to lowest)
 		String query = "SELECT * FROM `names, scores, and time` ORDER BY `names, scores, and time`.`Score` DESC";
 		try{
+			System.out.println("----- High Scores List -----");
 			statement = connection.createStatement();
 			ResultSet rs = statement.executeQuery(query);
 			while(rs.next()){
 				String name = rs.getString("Name");
 				int score = rs.getInt("Score");
 				int time = rs.getInt("Time");
+			
 				System.out.println(name +" - "+ score +" - "+ time);
 				
 				
@@ -221,6 +225,8 @@ class AnPanel extends JPanel implements Runnable {
 	AnPanel() {
 		super();
 		pts = 0;//player points
+		//set difficulty to easy
+		difficulty = 'm';
 		title = true;//open game menu
 		rnd = new Random();
 		bX = new ArrayList<Integer>();
@@ -256,7 +262,7 @@ class AnPanel extends JPanel implements Runnable {
 		//restart timer
 		time = 0;
 		//to start - generate asteroid once every 12 seconds
-		count = astGenSpeed = 12;
+		count = astGenSpeed = 10;
 		//reset asteroid generation cap 
 		astGenCap = 5;
 		//place barriers on game board
@@ -342,24 +348,25 @@ class AnPanel extends JPanel implements Runnable {
 					}
 					else if(p1.pts >= 5000)
 					{
-						astGenSpeed = 5;
+						astGenSpeed = 3;
 						astGenCap = 40;
 					}
 					else if(p1.pts >= 1000)
 					{
-						astGenSpeed = 7;
+						astGenSpeed = 4;
 						astGenCap = 30;
 					}
 					else if(p1.pts >= 500)
 					{
-						astGenSpeed = 10;
+						astGenSpeed = 5;
 						astGenCap = 20;
 					}
 					else if(p1.pts >= 250)
 					{
-						astGenSpeed = 10;
+						astGenSpeed = 6;
 						astGenCap = 10;
 					}
+					
 										
 					//draw player
 					movePlyr();
@@ -378,7 +385,7 @@ class AnPanel extends JPanel implements Runnable {
 					ticks = 0;
 					timer = 0;
 					if(!title && !gameOver){
-						if(count == astGenSpeed)
+						if(count >= astGenSpeed)
 						{
 							count = 0;
 							if(createAst && asteroids.size() < astGenCap)
@@ -501,6 +508,7 @@ class AnPanel extends JPanel implements Runnable {
 		yDirec = rnd.nextInt(2) + 1;
 		//add a new asteroid to the list of asteroids
 		asteroids.add(new Asteroid(x, y, xDirec, yDirec, size));
+		System.out.println("Asteroid added to game board");
 	}
 	
 	/**
@@ -691,8 +699,19 @@ class AnPanel extends JPanel implements Runnable {
 		{
 			resetGame();
 			g.setFont(tFont);//display Menu text
-			g.drawString("Asteroid Invaders!", 90, 150);
-			g.drawString("Press Enter to Start!", 50, 350);
+			g.drawString("Asteroid Invaders!", 80, 150);
+			g.drawString("Press Enter to Start!", 40, 350);
+			switch(difficulty)
+			{
+			case('m'):
+				g.drawString("- Difficulty: Med. -", 50, 250);
+				break;
+			case('d'):
+				g.drawString("- Difficulty: Hard -", 50, 250);
+				break;
+			default:
+				g.drawString("- Difficulty: Easy -", 50, 250);			
+			}
 			p1.draw(g);
 		}
 		else
@@ -751,11 +770,25 @@ class AnPanel extends JPanel implements Runnable {
 				p1.addBullet();
 				PlaySound(Shoot);
 			}
-			if(keys == KeyEvent.VK_UP)
+			if(keys == KeyEvent.VK_TAB)
+				switch(difficulty){
+				case('e'):
+					difficulty = 'm';
+					break;
+				case('m'):
+					difficulty = 'd';
+					break;
+				default:
+					difficulty = 'e';
+				}
 			if(keys == KeyEvent.VK_F1)
-				astGenSpeed -= 50;
+				astGenSpeed --;
 			if(keys == KeyEvent.VK_F2)
-				astGenSpeed += 50;
+				astGenSpeed ++;
+			if(keys == KeyEvent.VK_F3)
+				astGenCap --;
+			if(keys == KeyEvent.VK_F4)
+				astGenCap ++;
 				
 		}
 		 public void keyTyped(KeyEvent key) { }   

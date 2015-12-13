@@ -10,13 +10,23 @@ import java.awt.Rectangle;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+
 import java.sql.*;
+import sun.audio.*;
 
 /**
  * @author Dylan Steele
@@ -41,7 +51,47 @@ class AnPanel extends JPanel implements Runnable {
 	File Click = new File("SoundEffects/Click.WAV"); 
 	//Sound effect for player shot
 	File Shoot = new File("SoundEffects/Laser_Shoot.WAV");
+	//sound for title background music
+	File background = new File("SoundEffects/titleBGM.WAV");
 
+	
+	public void music(){
+		
+		AudioInputStream audioInputStream;
+		Clip clip = null;
+		try {
+			audioInputStream = AudioSystem.getAudioInputStream(background);
+			clip = AudioSystem.getClip();
+			clip.open(audioInputStream);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		clip.loop(Clip.LOOP_CONTINUOUSLY);
+		clip.start();
+	}
+		/*
+		String bip = "titleBGM.wav";
+		Media hit = new Media(bip);
+		MediaPlayer mediaPlayer = new MediaPlayer(hit);
+		mediaPlayer.play();
+		
+		AudioPlayer MGP = AudioPlayer.player;
+		AudioStream BGM;
+		AudioData MD;
+		ContinuousAudioDataStream loop = null;
+		try{
+		BGM = new AudioStream(getClass().getResourceAsStream("SoundEffects/titleBGM.wav"));
+		MD = BGM.getData();
+		loop = new ContinuousAudioDataStream(MD);
+		}catch(IOException error){
+		System.out.print("file not found");
+		//error.printStackTrace();
+		 * 
+		 
+		}
+		MGP.start(loop);
+		}*/
 	/*
 	//background music?
 	// This method take the wav file and play it. Problem is that it will not stop until the end of the song, we need to 
@@ -196,6 +246,7 @@ class AnPanel extends JPanel implements Runnable {
 		//query will sort by high score in descending order (highest to lowest)
 		String query = "SELECT * FROM `names, scores, and time` ORDER BY `names, scores, and time`.`Score` DESC";
 		try{
+			System.out.println("----- High Scores List -----");
 			statement = connection.createStatement();
 			ResultSet rs = statement.executeQuery(query);
 			while(rs.next()){
@@ -234,6 +285,7 @@ class AnPanel extends JPanel implements Runnable {
 		this.setFocusable(true);
 		p1 = new Ship();
 		resetGame();
+		music();//start music playing
 		start();
 		
 	}
@@ -726,6 +778,8 @@ class AnPanel extends JPanel implements Runnable {
 				p1.changeDirec('d');
 			if(keys == KeyEvent.VK_D || keys == KeyEvent.VK_RIGHT)//move right
 				p1.changeDirec('r');
+			if(keys == KeyEvent.VK_H)
+				getHighScores();
 			if(keys == KeyEvent.VK_ENTER)//play game
 			{
 				PlaySound(Click);

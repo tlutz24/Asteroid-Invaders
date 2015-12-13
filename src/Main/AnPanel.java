@@ -157,6 +157,8 @@ class AnPanel extends JPanel implements Runnable {
 	/**Boolean variables for game flow control*/
 	protected boolean title, gameOver, createAst, readyToFire, shot = false;
 	
+	protected boolean highScore;//boolean for displaying high score
+	
 	protected boolean running = false;
 	
 	private Thread th1;
@@ -164,6 +166,8 @@ class AnPanel extends JPanel implements Runnable {
 	private int time;
 	
 	private int count;
+	
+	private char difficulty;
 	
 	/**Random machine for asteroids*/
 	Random rnd;
@@ -198,6 +202,10 @@ class AnPanel extends JPanel implements Runnable {
 	Connection connection = null;
 	//Statement object
 	Statement statement = null;
+	
+	//list for holding highScoreStrings
+	List<String> scoreStrings;
+	int ticks;//used as index when displaying list
 
 	/**
 	 * Method to open connection with local database
@@ -246,19 +254,26 @@ class AnPanel extends JPanel implements Runnable {
 		//query will sort by high score in descending order (highest to lowest)
 		String query = "SELECT * FROM `names, scores, and time` ORDER BY `names, scores, and time`.`Score` DESC";
 		try{
-			System.out.println("----- High Scores List -----");
+			//System.out.println("----- High Scores List -----");
 			statement = connection.createStatement();
 			ResultSet rs = statement.executeQuery(query);
 			while(rs.next()){
 				String name = rs.getString("Name");
 				int score = rs.getInt("Score");
 				int time = rs.getInt("Time");
-				System.out.println(name +" - "+ score +" - "+ time);
+				//add string to list to print
+				scoreStrings.add(name + " - " + score + " - " + time);
+				
+				//g.drawString(name + " - " + score + " - " + time, xPos, yPos);
+				//System.out.println(name +" - "+ score +" - "+ time);
+				
+				
 			}
 			
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		
 	}
 	
 	/**
@@ -267,6 +282,8 @@ class AnPanel extends JPanel implements Runnable {
 	AnPanel() {
 		super();
 		pts = 0;//player points
+		//set difficulty to easy
+		difficulty = 'm';
 		title = true;//open game menu
 		rnd = new Random();
 		bX = new ArrayList<Integer>();
@@ -274,12 +291,14 @@ class AnPanel extends JPanel implements Runnable {
 		asteroids = new ArrayList<Asteroid>();
 		barriers = new ArrayList<Barrier>();
 		bullets = new ArrayList<Rectangle>();
+		scoreStrings = new ArrayList<String>();
 		try {
 			backImg = ImageIO.read(new File("Images/Asteroids-Background.png"));
-			connectDatabase();
+			connectDatabase();//connect to db and pull starting high scores
+			getHighScores();
 		} catch (Exception e) {
 			System.out.println(e.toString());
-			backImg = null;
+			//backImg = null;
 		}
 		this.addKeyListener(new InputKeyEvents());
 		this.setFocusable(true);
@@ -296,6 +315,7 @@ class AnPanel extends JPanel implements Runnable {
 	public void resetGame(){
 		//gameOver is false to restart the game
 		gameOver = false;
+		highScore = false;
 		//reset player
 		p1.revive();
 		//turn off asteroid generation 
@@ -303,7 +323,7 @@ class AnPanel extends JPanel implements Runnable {
 		//restart timer
 		time = 0;
 		//to start - generate asteroid once every 12 seconds
-		count = astGenSpeed = 12;
+		count = astGenSpeed = 10;
 		//reset asteroid generation cap 
 		astGenCap = 5;
 		//place barriers on game board
@@ -366,7 +386,7 @@ class AnPanel extends JPanel implements Runnable {
 			//return system time in nano seconds
 			long lastTime = System.nanoTime();
 			long timer = 0;
-			int ticks = 0;
+			ticks = 0;
 			//better game loop that runs at a constant 60fps 
 			while (running) {
 				now = System.nanoTime();
@@ -389,24 +409,25 @@ class AnPanel extends JPanel implements Runnable {
 					}
 					else if(p1.pts >= 5000)
 					{
-						astGenSpeed = 5;
+						astGenSpeed = 3;
 						astGenCap = 40;
 					}
 					else if(p1.pts >= 1000)
 					{
-						astGenSpeed = 7;
+						astGenSpeed = 4;
 						astGenCap = 30;
 					}
 					else if(p1.pts >= 500)
 					{
-						astGenSpeed = 10;
+						astGenSpeed = 5;
 						astGenCap = 20;
 					}
 					else if(p1.pts >= 250)
 					{
-						astGenSpeed = 10;
+						astGenSpeed = 6;
 						astGenCap = 10;
 					}
+					
 										
 					//draw player
 					movePlyr();
@@ -416,16 +437,20 @@ class AnPanel extends JPanel implements Runnable {
 					//move or remove asteroids
 					handleAsteroids();
 					
-					ticks++;
 					delta--;
 				}
 				//displays the fps counter in the console, which is locked at 60
 				if (timer >= 1000000000) {
 					//System.out.println("Ticks and Frames: " + ticks);
-					ticks = 0;
+					//increment ticks to move starting index each second
+					ticks++;
+					//to make sure the list will continue scrolling after displaying all high scores
+					//reset ticks to 0 before it will reference a null index
+					if(ticks == scoreStrings.size())
+						ticks = 0;
 					timer = 0;
 					if(!title && !gameOver){
-						if(count == astGenSpeed)
+						if(count >= astGenSpeed)
 						{
 							count = 0;
 							if(createAst && asteroids.size() < astGenCap)
@@ -548,6 +573,7 @@ class AnPanel extends JPanel implements Runnable {
 		yDirec = rnd.nextInt(2) + 1;
 		//add a new asteroid to the list of asteroids
 		asteroids.add(new Asteroid(x, y, xDirec, yDirec, size));
+		System.out.println("Asteroid added to game board");
 	}
 	
 	/**
@@ -603,6 +629,7 @@ class AnPanel extends JPanel implements Runnable {
 				removed = true;
 				gameOver = true;
 				p1.dead = true;
+				
 				//Prompt the user, asking if they want to add their score to the High Score list
 				int reply = JOptionPane.showConfirmDialog(this, "Would you like to add your score to the High Score list?");
 				if (reply == JOptionPane.YES_OPTION){
@@ -613,11 +640,20 @@ class AnPanel extends JPanel implements Runnable {
 		        		name += in.charAt(c);
 		        	addToDB(name, p1.pts, time);
 		        }
-				getHighScores();
+				highScore = true;//set highScore to true to display list
+				getHighScores();//refresh high scores list
 				/**
 				 * TODO:check that name/score/time is added to db
 				 * player is being added properly at the end of each game
+				 * -no errors with this yet
 				 */
+				
+				/*
+				 * JFrame that will display the High Score Table
+				 */
+				//HighScore highScoreFrame = new HighScore();
+				//I think we should display the high scores in the same window to keep 
+				//game esthetic
 				
 				createAst = !createAst;
 			}
@@ -726,13 +762,44 @@ class AnPanel extends JPanel implements Runnable {
 		
 		//set color to white
 		g.setColor(Color.WHITE);
-		//display title menu or game
-		if(title)
+		//display title menu, high score list, or game
+		if(highScore)
+		{
+			int yPos = 230;
+			g.drawImage(backImg, 0, 0, this);//clear board
+			g.setFont(tFont);//use same font as for title
+			g.drawString("--High Scores List--", 30, 150);//header for list
+			g.drawString("--------------------", 30, 190);
+			
+			//for loop is designed to increment it's starting index every second and 
+			//show the next 6 entries in the high score list - creating a scrolling like effect
+			for(int i = ticks; i < scoreStrings.size() && i < 6 + ticks; i++){
+				g.drawString(scoreStrings.get(i), 50, yPos);
+				yPos+=50;
+			}
+			
+			g.drawString("--------------------", 30, yPos);//footer for list
+			g.drawString("Press Esc for Menu", 50, yPos+50);
+			
+		}
+		else if(title)
 		{
 			resetGame();
 			g.setFont(tFont);//display Menu text
-			g.drawString("Asteroid Invaders!", 90, 150);
-			g.drawString("Press Enter to Start!", 50, 350);
+			g.drawString("Asteroid Invaders!", 80, 150);
+			g.drawString("Press Enter to Start!", 40, 350);
+			/*
+			switch(difficulty)
+			{
+			case('m'):
+				g.drawString("- Difficulty: Med. -", 50, 250);
+				break;
+			case('d'):
+				g.drawString("- Difficulty: Hard -", 50, 250);
+				break;
+			default:
+				g.drawString("- Difficulty: Easy -", 50, 250);			
+			}*/
 			p1.draw(g);
 		}
 		else
@@ -749,7 +816,7 @@ class AnPanel extends JPanel implements Runnable {
 		if(gameOver)
 		{
 			g.setFont(gameO);
-			g.drawString("GAME OVER", 120, 350);
+			g.drawString("GAME OVER", 120, 100);
 		}
 		
 		for(int i = 0; i < asteroids.size(); i++)
@@ -783,21 +850,39 @@ class AnPanel extends JPanel implements Runnable {
 			if(keys == KeyEvent.VK_ENTER)//play game
 			{
 				PlaySound(Click);
+				highScore = false;//hide high scores list
 				title = false;
 				createAst = true;
 			}
 			if(keys == KeyEvent.VK_ESCAPE)//end game
+			{
+				highScore = false;//hide high scores list
 				title = true;
+			}
 			if(keys == KeyEvent.VK_SPACE)//shoot
 			{
 				p1.addBullet();
 				PlaySound(Shoot);
 			}
-			if(keys == KeyEvent.VK_UP)
+			if(keys == KeyEvent.VK_TAB)//decide if difficulty is even necessary 
+				switch(difficulty){
+				case('e'):
+					difficulty = 'm';
+					break;
+				case('m'):
+					difficulty = 'd';
+					break;
+				default:
+					difficulty = 'e';
+				}
 			if(keys == KeyEvent.VK_F1)
-				astGenSpeed -= 50;
+				astGenSpeed --;
 			if(keys == KeyEvent.VK_F2)
-				astGenSpeed += 50;
+				astGenSpeed ++;
+			if(keys == KeyEvent.VK_F3)
+				astGenCap --;
+			if(keys == KeyEvent.VK_F4)
+				astGenCap ++;
 				
 		}
 		 public void keyTyped(KeyEvent key) { }   

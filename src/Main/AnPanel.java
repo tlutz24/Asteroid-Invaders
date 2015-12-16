@@ -31,36 +31,39 @@ class AnPanel extends JPanel implements Runnable {
 	/**
 	 * Files for sounds and method to play file objects
 	 */
-	// Sound effect for ship hit on barrier
+	/**	Sound effect for ship hit on barrier */
 	File Bounce = new File ("SoundEffects/Bounce.WAV");
-	// Sound effect for Ship collision
+	/** Sound effect for Ship collision */
 	File ShipExplode = new File("SoundEffects/ShipExplosion.WAV");
-	// Sound effect for Asteroid collision
+	/** Sound effect for Asteroid collision */
 	File AsteroidExplode = new File("SoundEffects/AsteroidsExplosion.WAV");
-	// Sound effect for Barrier collision
+	/** Sound effect for Barrier collision */
 	File BarrierHit = new File("SoundEffects/HitOnBarrier.WAV"); 
-	// Sound effect for Barrier collision
+	/** Sound effect for Barrier collision */
 	File Click = new File("SoundEffects/Click.WAV"); 
-	//Sound effect for player shot
+	/** Sound effect for player shot */
 	File Shoot = new File("SoundEffects/Laser_Shoot.WAV");
-	//sound for title background music
+	/** sound for title background music */
 	File background = new File("SoundEffects/titleBGM.WAV");
 
+	AudioInputStream audioInputStream;
+	Clip bkgMusic = null;
 	
-	public void music(){
-		
-		AudioInputStream audioInputStream;
-		Clip clip = null;
+	public void startBkgMusic(File musicClip){
 		try {
-			audioInputStream = AudioSystem.getAudioInputStream(background);
-			clip = AudioSystem.getClip();
-			clip.open(audioInputStream);
+			audioInputStream = AudioSystem.getAudioInputStream(musicClip);
+			bkgMusic = AudioSystem.getClip();
+			bkgMusic.open(audioInputStream);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		clip.loop(Clip.LOOP_CONTINUOUSLY);
-		clip.start();
+		bkgMusic.loop(Clip.LOOP_CONTINUOUSLY);
+		bkgMusic.start();
+	}
+	
+	public void stopBkgMusic(){
+		bkgMusic.stop();
 	}
 		
 	
@@ -255,7 +258,7 @@ class AnPanel extends JPanel implements Runnable {
 		this.setFocusable(true);
 		p1 = new Ship();
 		resetGame();
-		music();//start music playing
+		startBkgMusic(background);//start music playing
 		start();
 		
 	}
@@ -801,12 +804,14 @@ class AnPanel extends JPanel implements Runnable {
 			if(keys == KeyEvent.VK_ENTER)//play game
 			{
 				PlaySound(Click);
+				stopBkgMusic();
 				highScore = false;//hide high scores list
 				title = false;
 				createAst = true;
 			}
 			if(keys == KeyEvent.VK_ESCAPE)//end game
 			{
+				startBkgMusic(background);
 				highScore = false;//hide high scores list
 				title = true;
 			}

@@ -45,10 +45,16 @@ class AnPanel extends JPanel implements Runnable {
 	File Shoot = new File("SoundEffects/Laser_Shoot.WAV");
 	/** sound for title background music */
 	File background = new File("SoundEffects/titleBGM.WAV");
-
+	/** Object used to buffer background music */
 	AudioInputStream audioInputStream;
+	/** Clip object to play and stop music */
 	Clip bkgMusic = null;
 	
+	/**
+	 * Method to start playing a background music clip on a continuous loop
+	 * 
+	 * @param musicClip		File object referencing the music clip to loop
+	 */
 	public void startBkgMusic(File musicClip){
 		try {
 			audioInputStream = AudioSystem.getAudioInputStream(musicClip);
@@ -62,6 +68,9 @@ class AnPanel extends JPanel implements Runnable {
 		bkgMusic.start();
 	}
 	
+	/**
+	 * Method to stop background music clip 
+	 */
 	public void stopBkgMusic(){
 		bkgMusic.stop();
 	}
@@ -136,27 +145,28 @@ class AnPanel extends JPanel implements Runnable {
 	/**
 	 * Database variables and Database access functions below
 	 */
-	//JDBC driver string
+	/** JDBC driver string */
 	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-	//Database URL
+	/** Database URL */
 	static final String DB_URL = "jdbc:mysql://localhost/high score list";/** TODO:look at db url */
-	//User name string
+	/** User name string */
 	static final String USER = "root";
-	//Password string
+	/** Password string */
 	static final String PASS = "";
-	//Connection object
+	/** Connection object */
 	Connection connection = null;
-	//Statement object
+	/** Statement object */
 	Statement statement = null;
 	
-	//list for holding highScoreStrings
+	/** List for holding highScoreStrings */
 	List<String> scoreStrings;
-	int ticks;//used as index when displaying list
+	/** Used as index when displaying list */
+	int ticks;
 
 	/**
 	 * Method to open connection with local database
 	 * 
-	 * @throws Exception
+	 * @throws Exception		
 	 */
 	public void connectDatabase() throws Exception {
 		//Register the Driver (step 2)

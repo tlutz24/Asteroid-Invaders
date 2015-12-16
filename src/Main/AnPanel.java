@@ -10,23 +10,15 @@ import java.awt.Rectangle;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-
 import java.sql.*;
-import sun.audio.*;
 
 /**
  * @author Dylan Steele
@@ -70,56 +62,7 @@ class AnPanel extends JPanel implements Runnable {
 		clip.loop(Clip.LOOP_CONTINUOUSLY);
 		clip.start();
 	}
-		/*
-		String bip = "titleBGM.wav";
-		Media hit = new Media(bip);
-		MediaPlayer mediaPlayer = new MediaPlayer(hit);
-		mediaPlayer.play();
 		
-		AudioPlayer MGP = AudioPlayer.player;
-		AudioStream BGM;
-		AudioData MD;
-		ContinuousAudioDataStream loop = null;
-		try{
-		BGM = new AudioStream(getClass().getResourceAsStream("SoundEffects/titleBGM.wav"));
-		MD = BGM.getData();
-		loop = new ContinuousAudioDataStream(MD);
-		}catch(IOException error){
-		System.out.print("file not found");
-		//error.printStackTrace();
-		 * 
-		 
-		}
-		MGP.start(loop);
-		}*/
-	/*
-	//background music?
-	// This method take the wav file and play it. Problem is that it will not stop until the end of the song, we need to 
-	// figure out a way to stop it playing when we need to do that. And it only plays once, but that would be easy to fix
-	public void music()
-	{
-		AudioPlayer MGP = AudioPlayer.player;
-		AudioStream BGM;
-		
-	try{
-		//BGM = new AudioStream(new FileInputStream("SoundEffects/titleBGM.wav"));
-		//MD = BGM.getData();
-		//loop = new ContinuousAudioDataStream(MD);
-		
-	
-		  InputStream test = new FileInputStream("SoundEffects/titleBGM.wav");
-          BGM = new AudioStream(test);
-          AudioPlayer.player.start(BGM);
-          
-        
-		}  catch(FileNotFoundException e){
-            System.out.print(e);
-        }	
-		catch(IOException error){
-			System.out.println(error);
-		}		
-	}
-	*/
 	
 	/**
 	 * Method to play sound clips for game-play sound effects
@@ -254,20 +197,28 @@ class AnPanel extends JPanel implements Runnable {
 		//query will sort by high score in descending order (highest to lowest)
 		String query = "SELECT * FROM `names, scores, and time` ORDER BY `names, scores, and time`.`Score` DESC";
 		try{
-			//System.out.println("----- High Scores List -----");
+			//clear high score list
+			while(scoreStrings.size() > 0)
+				scoreStrings.remove(0);
+			
 			statement = connection.createStatement();
 			ResultSet rs = statement.executeQuery(query);
 			while(rs.next()){
 				String name = rs.getString("Name");
+				while(name.length() < 6)
+					name += " ";
 				int score = rs.getInt("Score");
 				int time = rs.getInt("Time");
+				
 				//add string to list to print
-				scoreStrings.add(name + " - " + score + " - " + time);
-				
-				//g.drawString(name + " - " + score + " - " + time, xPos, yPos);
-				//System.out.println(name +" - "+ score +" - "+ time);
-				
-				
+				if(score < 10000)
+					scoreStrings.add(name + " - " + score + "  - " + time);
+				else if(score < 1000)
+					scoreStrings.add(name + " - " + score + "   - " + time);
+				else if(score < 100)
+					scoreStrings.add(name + " - " + score + "    - " + time);
+				else 
+					scoreStrings.add(name + " - " + score + " - " + time);
 			}
 			
 		}catch(Exception e){
@@ -774,7 +725,7 @@ class AnPanel extends JPanel implements Runnable {
 			//for loop is designed to increment it's starting index every second and 
 			//show the next 6 entries in the high score list - creating a scrolling like effect
 			for(int i = ticks; i < scoreStrings.size() && i < 6 + ticks; i++){
-				g.drawString(scoreStrings.get(i), 50, yPos);
+				g.drawString(scoreStrings.get(i), 30, yPos);
 				yPos+=50;
 			}
 			

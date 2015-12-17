@@ -47,8 +47,8 @@ class GamePanel extends JPanel implements Runnable {
 	File titleBkg = new File("SoundEffects/titleBGM.WAV");
 	
 	//change these files 
-	File playingBkg = new File("SoundEffects/titleBGM.WAV");
-	File gameOverBkg = new File("SoundEffects/titleBGM.WAV");
+	File playingBkg = new File("SoundEffects/Gameplay.WAV");
+	File gameOverBkg = new File("SoundEffects/GameOver.WAV");
 	
 	/** Object used to buffer background music */
 	AudioInputStream audioInputStream;
@@ -609,10 +609,11 @@ class GamePanel extends JPanel implements Runnable {
 			}
 			
 			//asteroid collides with player
-			if(!removed && temp.ast.intersects(p1.p) && asteroids.size() > 0 && p1.dead == false){
+			else if(!removed && temp.ast.intersects(p1.p) && asteroids.size() > 0 && p1.dead == false){
 				PlaySound(ShipExplode);//Play player explode sound
 				stopBkgMusic();
-				startBkgMusic(gameOverBkg);
+				//startBkgMusic(gameOverBkg);
+				PlaySound(gameOverBkg);
 				asteroids.remove(i);
 				removed = true;
 				gameOver = true;

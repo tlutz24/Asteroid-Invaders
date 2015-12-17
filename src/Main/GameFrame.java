@@ -11,21 +11,28 @@ import javax.swing.JFrame;
  * @author Jason Liu
  *
  */
-public class AnimationFrame extends JFrame {
+public class GameFrame extends JFrame {
 
 	/**
 	 * Constructor for class
 	 */
-	AnimationFrame()  {
-		super ("Asteroid Invaders!");//set title of frame
-		this.setSize(640, 750);//set game size
-		this.setResizable(false);//do not allow resizing
+	GameFrame()  {
+		//set title of frame
+		super ("Asteroid Invaders!");
+		//set game size
+		this.setSize(640, 750);
+		//do not allow resizing
+		this.setResizable(false);
+		
 		this.setLocationRelativeTo(null);
-		setBackground(Color.black);//set background to black
+		//set background to black
+		setBackground(Color.black);
+		
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
-		anPanel = new AnPanel();
-		this.getContentPane().add(anPanel, BorderLayout.CENTER);
+		mainGame = new GamePanel();
+		
+		this.getContentPane().add(mainGame, BorderLayout.CENTER);
 		
 		this.setVisible(true);
 		
@@ -37,7 +44,7 @@ public class AnimationFrame extends JFrame {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		AnimationFrame frame = new AnimationFrame();
+		GameFrame frame = new GameFrame();
 	}
-	protected AnPanel anPanel;
+	protected GamePanel mainGame;
 }

@@ -26,7 +26,7 @@ import java.sql.*;
  * @author Jason Liu
  *
  */
-class AnPanel extends JPanel implements Runnable {
+class GamePanel extends JPanel implements Runnable {
 	
 	/**
 	 * Files for sounds and method to play file objects
@@ -44,7 +44,12 @@ class AnPanel extends JPanel implements Runnable {
 	/** Sound effect for player shot */
 	File Shoot = new File("SoundEffects/Laser_Shoot.WAV");
 	/** sound for title background music */
-	File background = new File("SoundEffects/titleBGM.WAV");
+	File titleBkg = new File("SoundEffects/titleBGM.WAV");
+	
+	//change these files 
+	File playingBkg = new File("SoundEffects/titleBGM.WAV");
+	File gameOverBkg = new File("SoundEffects/titleBGM.WAV");
+	
 	/** Object used to buffer background music */
 	AudioInputStream audioInputStream;
 	/** Clip object to play and stop music */
@@ -111,8 +116,8 @@ class AnPanel extends JPanel implements Runnable {
 	protected Image img, backImg, buff;//ship and background image
 	/**Boolean variables for game flow control*/
 	protected boolean title, gameOver, createAst, readyToFire, shot = false;
-	
-	protected boolean highScore;//boolean for displaying high score
+	//boolean for displaying high score
+	protected boolean highScore;
 	
 	protected boolean running = false;
 	
@@ -139,6 +144,8 @@ class AnPanel extends JPanel implements Runnable {
 	Font tFont = new Font("Monospaced", Font.ITALIC | Font.BOLD, 45);
 	/**Font for statistics in game*/
 	Font sFont = new Font("Monospaced", Font.ITALIC, 15);
+	/** Font for back story of game */
+	Font storyFont = new Font("Monospaced", Font.ITALIC, 20);
 	/**Font for game over screen*/
 	Font gameO = new Font("Monospaced", Font.ITALIC | Font.BOLD, 75);
 	
@@ -204,7 +211,7 @@ class AnPanel extends JPanel implements Runnable {
 	}
 	
 	/**
-	 * Method to pull info from high score DB and print it to the console
+	 * Method to pull info from high score DB and store it in a list
 	 */
 	public void getHighScores(){
 		//query will sort by high score in descending order (highest to lowest)
@@ -243,7 +250,7 @@ class AnPanel extends JPanel implements Runnable {
 	/**
 	 * Constructor for class
 	 */
-	AnPanel() {
+	GamePanel() {
 		super();
 		pts = 0;//player points
 		//set difficulty to easy
@@ -268,7 +275,7 @@ class AnPanel extends JPanel implements Runnable {
 		this.setFocusable(true);
 		p1 = new Ship();
 		resetGame();
-		startBkgMusic(background);//start music playing
+		startBkgMusic(titleBkg);//start music playing
 		start();
 		
 	}
@@ -312,7 +319,7 @@ class AnPanel extends JPanel implements Runnable {
 		for(int i = 0; i < numBarriers; i++)
 		{
 			//create and add barrier to list
-			bar = new Barrier(55 + 150*i, 600, strength);
+			bar = new Barrier(55 + 150*i, 550, strength);
 			barriers.add(bar);
 		}
 	}
@@ -368,27 +375,27 @@ class AnPanel extends JPanel implements Runnable {
 					//increase speed of generation based of players points
 					if(p1.pts >= 10000)
 					{
-						astGenSpeed = 2;
+						astGenSpeed = 1;
 						astGenCap = 50;
 					}
 					else if(p1.pts >= 5000)
 					{
-						astGenSpeed = 3;
+						astGenSpeed = 2;
 						astGenCap = 40;
 					}
 					else if(p1.pts >= 1000)
 					{
-						astGenSpeed = 4;
+						astGenSpeed = 3;
 						astGenCap = 30;
 					}
 					else if(p1.pts >= 500)
 					{
-						astGenSpeed = 5;
+						astGenSpeed = 4;
 						astGenCap = 20;
 					}
 					else if(p1.pts >= 250)
 					{
-						astGenSpeed = 6;
+						astGenSpeed = 5;
 						astGenCap = 10;
 					}
 					
@@ -484,7 +491,7 @@ class AnPanel extends JPanel implements Runnable {
 			
 		}
 		//detect reason to prevent y move
-		if ((p1.yDirec == -1 && p1.yNew < 550)||(p1.yDirec == 1 && p1.yNew+30 > getSize().height)||(gameOver || title ))
+		if ((p1.yDirec == -1 && p1.yNew < 400)||(p1.yDirec == 1 && p1.yNew+30 > getSize().height)||(gameOver || title ))
 			p1.yDirec = 0;
 		//detect reason to prevent x move
 		if((p1.xDirec == -1 && p1.xNew < 0)||(p1.xDirec == 1 && p1.xNew+30 > getSize().width)||(gameOver || title ))
@@ -578,17 +585,34 @@ class AnPanel extends JPanel implements Runnable {
 					temp.yDirec ++;
 			}
 				
-			//asteroid hits bottom edge
+			//asteroid hits bottom edge and kills everyone on earth
+			/** TODO: Add visual and auditory indicator so player knows the earth was hit */
 			if(!removed && temp.y > 750 && asteroids.size() > 0)
 			{
 				asteroids.remove(i);
 				removed = true;
-				createAsteroid();
+				//createAsteroid();
+				
+				gameOver = true;
+				
+				int reply = JOptionPane.showConfirmDialog(this, "Would you like to add your score to the High Score list?");
+				if (reply == JOptionPane.YES_OPTION){
+		        	String name = "";
+		        	String in = JOptionPane.showInputDialog("Enter your name (limit - 6 characters):");
+				
+		        	for(int c = 0; c < 6 && c < in.length(); c++)
+		        		name += in.charAt(c);
+		        	addToDB(name, p1.pts, time);
+		        }
+				highScore = true;//set highScore to true to display list
+				getHighScores();//refresh high scores list
 			}
 			
 			//asteroid collides with player
 			if(!removed && temp.ast.intersects(p1.p) && asteroids.size() > 0 && p1.dead == false){
 				PlaySound(ShipExplode);//Play player explode sound
+				stopBkgMusic();
+				startBkgMusic(gameOverBkg);
 				asteroids.remove(i);
 				removed = true;
 				gameOver = true;
@@ -730,7 +754,7 @@ class AnPanel extends JPanel implements Runnable {
 		if(highScore)
 		{
 			int yPos = 230;
-			g.drawImage(backImg, 0, 0, this);//clear board
+			//g.drawImage(backImg, 0, 0, this);//clear board
 			g.setFont(tFont);//use same font as for title
 			g.drawString("--High Scores List--", 30, 150);//header for list
 			g.drawString("--------------------", 30, 190);
@@ -752,6 +776,12 @@ class AnPanel extends JPanel implements Runnable {
 			g.setFont(tFont);//display Menu text
 			g.drawString("Asteroid Invaders!", 80, 150);
 			g.drawString("Press Enter to Start!", 40, 350);
+			g.setFont(storyFont);
+			g.drawString("Earth is being attacked by Asteroid Invaders!", 40, 200);
+			g.drawString("You're the last hope humanity has at survival!", 40, 220);
+			g.drawString("Use Earth's Defense barriers to aid you in", 65, 250);
+			g.drawString("keeping any asteroids from making it through.", 45, 270);
+			
 			/*
 			switch(difficulty)
 			{
@@ -809,19 +839,23 @@ class AnPanel extends JPanel implements Runnable {
 				p1.changeDirec('d');
 			if(keys == KeyEvent.VK_D || keys == KeyEvent.VK_RIGHT)//move right
 				p1.changeDirec('r');
-			if(keys == KeyEvent.VK_H)
-				getHighScores();
+			if(keys == KeyEvent.VK_H){
+				//getHighScores();
+				highScore = !highScore;
+			}
 			if(keys == KeyEvent.VK_ENTER)//play game
 			{
 				PlaySound(Click);
 				stopBkgMusic();
+				startBkgMusic(playingBkg);
 				highScore = false;//hide high scores list
 				title = false;
 				createAst = true;
 			}
 			if(keys == KeyEvent.VK_ESCAPE)//end game
 			{
-				startBkgMusic(background);
+				stopBkgMusic();
+				startBkgMusic(titleBkg);
 				highScore = false;//hide high scores list
 				title = true;
 			}

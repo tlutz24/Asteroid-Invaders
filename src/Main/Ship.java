@@ -63,9 +63,15 @@ public class Ship{
 	}
 	
 	/**
-	 * Method to move player and prevent player from moving when necessary 
+	 * Method to move player and prevent player from moving when necessary
+	 * 
+	 * @param barriers		List of Barrier objects to check for collision
+	 * @param gameWidth		Width of game frame
+	 * @param gameHeight	Height of game frame
+	 * @return	true for bouncing off of barrier - false otherwise
 	 */
-	public void movePlyr(List<Barrier> barriers, int gameWidth, int gameHeight) {
+	public boolean movePlyr(List<Barrier> barriers, int gameWidth, int gameHeight) {
+		boolean bounce = false;
 		//check if move is allowed
 		setLocation(xNew, yNew);
 		if(detectCollide(barriers))//player collision with barrier
@@ -78,7 +84,8 @@ public class Ship{
 			if (xDirec == -1)
 				xDirec = 1;
 			else if (xDirec == 1)
-				xDirec = -1;			
+				xDirec = -1;		
+			bounce = true;
 		}
 		//detect reason to prevent y move
 		if ((yDirec == -1 && yNew < 400)||(yDirec == 1 && yNew+30 > gameHeight))
@@ -87,11 +94,11 @@ public class Ship{
 		if((xDirec == -1 && xNew < 0)||(xDirec == 1 && xNew+30 > gameWidth))
 			xDirec = 0;
 		
-
 		//move player
 		xNew += (4*xDirec);
 		yNew += (4*yDirec);
 		setLocation(xNew, yNew);
+		return bounce;
 	}
 	
 	/**

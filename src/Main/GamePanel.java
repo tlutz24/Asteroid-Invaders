@@ -82,103 +82,6 @@ class GamePanel extends JPanel implements Runnable {
 	/**Font for game over screen*/
 	Font gameO = new Font("Monospaced", Font.ITALIC | Font.BOLD, 75);
 	
-	/**
-	 * Database variables and Database access functions below
-	 */
-	/** JDBC driver string */
-	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-	/** Database URL */
-	static final String DB_URL = "jdbc:mysql://localhost/high score list";/** TODO:look at db url */
-	/** User name string */
-	static final String USER = "root";
-	/** Password string */
-	static final String PASS = "";
-	/** Connection object */
-	Connection connection = null;
-	/** Statement object */
-	Statement statement = null;
-	
-	/** List for holding highScoreStrings */
-	List<String> scoreStrings;
-	/** Used as index when displaying list */
-	int ticks;
-
-	/**
-	 * Method to open connection with local database
-	 * 
-	 * @throws Exception		
-	 */
-	public void connectDatabase() throws Exception {
-		//Register the Driver (step 2)
-		String driverName = "com.mysql.jdbc.Driver";
-	    Class.forName(driverName);
-	    
- 
-	    //Open connection
-	    System.out.println("Connecting to db...");
-	    connection = DriverManager.getConnection(DB_URL, USER, PASS);
-	    
-	}
-	
-	/**
-	 * Method to add entry to High Score DB
-	 * 
-	 * @param name		String holding player's name
-	 * @param score		int holding player's score
-	 * @param time		int holding player's time alive
-	 */
-	public void addToDB(String name, int score, int time){
-		String command = "INSERT INTO `high score list`.`names, scores, and time` "
-				+ "(`Name`, `Score`, `Time`) VALUES ('" + name + "', '" + score + "', '" + time + "');";
-		//issue command to sql connection
-		try {
-			//Create statement
-			System.out.println("Adding " + name + " to high scores list");
-			statement = connection.createStatement();
-			statement.execute(command);
-			System.out.println("Added " + name + " to the high scores list");
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Method to pull info from high score DB and store it in a list
-	 */
-	public void getHighScores(){
-		//query will sort by high score in descending order (highest to lowest)
-		String query = "SELECT * FROM `names, scores, and time` ORDER BY `names, scores, and time`.`Score` DESC";
-		try{
-			//clear high score list
-			while(scoreStrings.size() > 0)
-				scoreStrings.remove(0);
-			
-			statement = connection.createStatement();
-			ResultSet rs = statement.executeQuery(query);
-			while(rs.next()){
-				String name = rs.getString("Name");
-				while(name.length() < 6)
-					name += " ";
-				int score = rs.getInt("Score");
-				int time = rs.getInt("Time");
-				
-				//add string to list to print
-				if(score < 10000)
-					scoreStrings.add(name + " - " + score + "  - " + time);
-				else if(score < 1000)
-					scoreStrings.add(name + " - " + score + "   - " + time);
-				else if(score < 100)
-					scoreStrings.add(name + " - " + score + "    - " + time);
-				else 
-					scoreStrings.add(name + " - " + score + " - " + time);
-			}
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-	}
 	
 	/**
 	 * Constructor for class
@@ -187,7 +90,7 @@ class GamePanel extends JPanel implements Runnable {
 		super();
 		pts = 0;//player points
 		//set difficulty to easy
-		difficulty = 'm';
+		//difficulty = 'e';
 		title = true;//open game menu
 		rnd = new Random();
 		bX = new ArrayList<Integer>();
@@ -335,7 +238,8 @@ class GamePanel extends JPanel implements Runnable {
 										
 					//draw player
 					if(!(gameOver || title ))
-						p1.movePlyr(barriers, getSize().width, getSize().height);
+						if(p1.movePlyr(barriers, getSize().width, getSize().height))
+							PlaySound(Bounce);
 					//handle shots
 					if(p1.shoot(barriers))
 						PlaySound(BarrierHit);
@@ -425,9 +329,6 @@ class GamePanel extends JPanel implements Runnable {
 	
 	/**
 	 * Handles asteroids - moving them and eventually removing them
-	 * 
-	 * TODO: implement code to remove a proper amount of the barrier based on size of asteroid
-	 *  - I think I did finish this, but I'm still in the process of a thorough debug
 	 */
 	public void handleAsteroids(){
 		//variable to remember if current asteroid has already been removed
@@ -688,24 +589,122 @@ class GamePanel extends JPanel implements Runnable {
 	}
 
 	/**
+	 * Database variables and Database access functions below
+	 */
+	/** JDBC driver string */
+	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+	/** Database URL */
+	static final String DB_URL = "jdbc:mysql://localhost/high score list";/** TODO:look at db url */
+	/** User name string */
+	static final String USER = "root";
+	/** Password string */
+	static final String PASS = "";
+	/** Connection object */
+	Connection connection = null;
+	/** Statement object */
+	Statement statement = null;
+	
+	/** List for holding highScoreStrings */
+	List<String> scoreStrings;
+	/** Used as index when displaying list */
+	int ticks;
+
+	/**
+	 * Method to open connection with local database
+	 * 
+	 * @throws Exception		
+	 */
+	public void connectDatabase() throws Exception {
+		//Register the Driver (step 2)
+		String driverName = "com.mysql.jdbc.Driver";
+	    Class.forName(driverName);
+	    
+ 
+	    //Open connection
+	    System.out.println("Connecting to db...");
+	    connection = DriverManager.getConnection(DB_URL, USER, PASS);
+	    
+	}
+	
+	/**
+	 * Method to add entry to High Score DB
+	 * 
+	 * @param name		String holding player's name
+	 * @param score		int holding player's score
+	 * @param time		int holding player's time alive
+	 */
+	public void addToDB(String name, int score, int time){
+		String command = "INSERT INTO `high score list`.`names, scores, and time` "
+				+ "(`Name`, `Score`, `Time`) VALUES ('" + name + "', '" + score + "', '" + time + "');";
+		//issue command to sql connection
+		try {
+			//Create statement
+			System.out.println("Adding " + name + " to high scores list");
+			statement = connection.createStatement();
+			statement.execute(command);
+			System.out.println("Added " + name + " to the high scores list");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Method to pull info from high score DB and store it in a list
+	 */
+	public void getHighScores(){
+		//query will sort by high score in descending order (highest to lowest)
+		String query = "SELECT * FROM `names, scores, and time` ORDER BY `names, scores, and time`.`Score` DESC";
+		try{
+			//clear high score list
+			while(scoreStrings.size() > 0)
+				scoreStrings.remove(0);
+			
+			statement = connection.createStatement();
+			ResultSet rs = statement.executeQuery(query);
+			while(rs.next()){
+				String name = rs.getString("Name");
+				while(name.length() < 6)
+					name += " ";
+				int score = rs.getInt("Score");
+				int time = rs.getInt("Time");
+				
+				//add string to list to print
+				if(score < 10000)
+					scoreStrings.add(name + " - " + score + "  - " + time);
+				else if(score < 1000)
+					scoreStrings.add(name + " - " + score + "   - " + time);
+				else if(score < 100)
+					scoreStrings.add(name + " - " + score + "    - " + time);
+				else 
+					scoreStrings.add(name + " - " + score + " - " + time);
+			}
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
+	/**
 	 * Files for sounds and method to play file objects
 	 */
 	/**	Sound effect for ship hit on barrier */
-	File Bounce = new File ("SoundEffects/Bounce.WAV");
+	static final File Bounce = new File ("SoundEffects/Bounce.WAV");
 	/** Sound effect for Ship collision */
-	File ShipExplode = new File("SoundEffects/ShipExplosion.WAV");
+	static final File ShipExplode = new File("SoundEffects/ShipExplosion.WAV");
 	/** Sound effect for Asteroid collision */
-	File AsteroidExplode = new File("SoundEffects/AsteroidsExplosion.WAV");
+	static final File AsteroidExplode = new File("SoundEffects/AsteroidsExplosion.WAV");
 	/** Sound effect for Barrier collision */
-	File BarrierHit = new File("SoundEffects/HitOnBarrier.WAV"); 
+	static final File BarrierHit = new File("SoundEffects/HitOnBarrier.WAV"); 
 	/** Sound effect for Barrier collision */
-	File Click = new File("SoundEffects/Click.WAV"); 
+	static final File Click = new File("SoundEffects/Click.WAV"); 
 	/** Sound effect for player shot */
-	File Shoot = new File("SoundEffects/Laser_Shoot.WAV");
+	static final File Shoot = new File("SoundEffects/Laser_Shoot.WAV");
 	/** sound for background music */
-	File titleBkg = new File("SoundEffects/titleBGM.WAV");
-	File playingBkg = new File("SoundEffects/Gameplay.WAV");
-	File gameOverBkg = new File("SoundEffects/GameOver.WAV");
+	static final File titleBkg = new File("SoundEffects/titleBGM.WAV");
+	static final File playingBkg = new File("SoundEffects/Gameplay.WAV");
+	static final File gameOverBkg = new File("SoundEffects/GameOver.WAV");
 	
 	/** Object used to buffer background music */
 	AudioInputStream audioInputStream;

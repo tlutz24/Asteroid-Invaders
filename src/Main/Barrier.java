@@ -16,8 +16,6 @@ public class Barrier{
 	int x, y, width, height;
 	/**List of Rectangles that make up barrier*/
 	List<Rectangle> barrier = new ArrayList<Rectangle>();
-	/**Rectangle representing full barrier - may not be necessary anymore*/
-	Rectangle fullBarrier;
 	
 	/**
 	 * Default constructor for the Barrier class
@@ -44,8 +42,7 @@ public class Barrier{
 	
 	/**
 	 * Method to detect if the barrier has been hit
-	 * 
-	 * 	-I believe this function is no longer necessary - could someone confirm?
+	 * 	-Used to detect if player has hit the barrier
 	 * 
 	 * @param r		rectangle to check for collision
 	 * @return		return an integer, -1 for no collision, and the index of the collision otherwise
@@ -63,28 +60,6 @@ public class Barrier{
 	}
 	
 	/**
-	 * Method to return a list of the bits of the barrier that have been hit
-	 * 
-	 * 	-I believe this function is no longer necessary - could someone confirm?
-	 * 
-	 * @param r		rectangle to check for collision
-	 * @return		return a list of Integers corresponding to the indexes of the hit bits of barrier
-	 */
-	public ArrayList<Integer> isHitList(Rectangle r)
-	{
-		//list holding indexes of hit bits - variable that will be returned
-		ArrayList<Integer> hits = new ArrayList<Integer>();
-		//for each bit in the barrier
-		for(int i = 0; i < barrier.size(); i++)
-			//if the bit collides with the parameter
-			if(r.intersects(barrier.get(i)))
-				//add the index to the list
-				hits.add(i);
-		//return the list
-		return hits;
-	}
-	
-	/**
 	 * Method to remove a bit of the barrier 
 	 * 
 	 * @param i 	index of the bit to remove
@@ -95,6 +70,7 @@ public class Barrier{
 			//remove the bit of the barrier
 			barrier.remove(i);
 	}	
+	
 	
 	/**
 	 * Method to detect hits and remove the bits of the barrier that were hit

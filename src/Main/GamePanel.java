@@ -25,79 +25,12 @@ import java.sql.*;
  * @author Tyler Lutz
  * @author Jason Liu
  *
+ * This Class controls most of the game play mechanics 
+ * It handles creating all objects, the current state of the game and so on
+ * 
  */
 class GamePanel extends JPanel implements Runnable {
-	
-	/**
-	 * Files for sounds and method to play file objects
-	 */
-	/**	Sound effect for ship hit on barrier */
-	File Bounce = new File ("SoundEffects/Bounce.WAV");
-	/** Sound effect for Ship collision */
-	File ShipExplode = new File("SoundEffects/ShipExplosion.WAV");
-	/** Sound effect for Asteroid collision */
-	File AsteroidExplode = new File("SoundEffects/AsteroidsExplosion.WAV");
-	/** Sound effect for Barrier collision */
-	File BarrierHit = new File("SoundEffects/HitOnBarrier.WAV"); 
-	/** Sound effect for Barrier collision */
-	File Click = new File("SoundEffects/Click.WAV"); 
-	/** Sound effect for player shot */
-	File Shoot = new File("SoundEffects/Laser_Shoot.WAV");
-	/** sound for title background music */
-	File titleBkg = new File("SoundEffects/titleBGM.WAV");
-	
-	//change these files 
-	File playingBkg = new File("SoundEffects/Gameplay.WAV");
-	File gameOverBkg = new File("SoundEffects/GameOver.WAV");
-	
-	/** Object used to buffer background music */
-	AudioInputStream audioInputStream;
-	/** Clip object to play and stop music */
-	Clip bkgMusic = null;
-	
-	/**
-	 * Method to start playing a background music clip on a continuous loop
-	 * 
-	 * @param musicClip		File object referencing the music clip to loop
-	 */
-	public void startBkgMusic(File musicClip){
-		try {
-			audioInputStream = AudioSystem.getAudioInputStream(musicClip);
-			bkgMusic = AudioSystem.getClip();
-			bkgMusic.open(audioInputStream);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		bkgMusic.loop(Clip.LOOP_CONTINUOUSLY);
-		bkgMusic.start();
-	}
-	
-	/**
-	 * Method to stop background music clip 
-	 */
-	public void stopBkgMusic(){
-		bkgMusic.stop();
-	}
 		
-	
-	/**
-	 * Method to play sound clips for game-play sound effects
-	 * 
-	 * @param Sound		sound file to load into audio system
-	 */
-	public void PlaySound(File Sound)
-
-	{
-		try{
-			Clip clip = AudioSystem.getClip();
-			clip.open(AudioSystem.getAudioInputStream(Sound));
-			clip.start();	
-		}catch(Exception e){
-			System.out.println(e);
-		}
-	}
-	
 	/**Graphics object used to draw game*/
 	private Graphics gImg;
 	/**Player points variable*/
@@ -116,7 +49,7 @@ class GamePanel extends JPanel implements Runnable {
 	protected Image img, backImg, buff;//ship and background image
 	/**Boolean variables for game flow control*/
 	protected boolean title, gameOver, createAst, readyToFire, shot = false;
-	//boolean for displaying high score
+	//boolean for displaying high score screen
 	protected boolean highScore;
 	
 	protected boolean running = false;
@@ -145,7 +78,7 @@ class GamePanel extends JPanel implements Runnable {
 	/**Font for statistics in game*/
 	Font sFont = new Font("Monospaced", Font.ITALIC, 15);
 	/** Font for back story of game */
-	Font storyFont = new Font("Monospaced", Font.ITALIC, 20);
+	Font storyFont = new Font("Monospaced", Font.BOLD, 20);
 	/**Font for game over screen*/
 	Font gameO = new Font("Monospaced", Font.ITALIC | Font.BOLD, 75);
 	
@@ -275,7 +208,7 @@ class GamePanel extends JPanel implements Runnable {
 		this.setFocusable(true);
 		p1 = new Ship();
 		resetGame();
-		startBkgMusic(titleBkg);//start music playing
+		startBackgroundMusic(titleBkg);//start music playing
 		start();
 		
 	}
@@ -401,7 +334,8 @@ class GamePanel extends JPanel implements Runnable {
 					
 										
 					//draw player
-					movePlyr();
+					if(!(gameOver || title ))
+						p1.movePlyr(barriers, getSize().width, getSize().height);
 					//handle shots
 					if(p1.shoot(barriers))
 						PlaySound(BarrierHit);
@@ -464,64 +398,6 @@ class GamePanel extends JPanel implements Runnable {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	/**
-	 * Method to move player and prevent player from moving when necessary 
-	 */
-	public void movePlyr() {
-		//check if move is allowed
-		p1.setLocation(p1.xNew, p1.yNew);//necessary? - yes - the only reason player collision detection works
-		
-		if(detectCollide())//player collision with barrier
-		{
-			//prevent player from moving into barrier
-			
-			if (p1.yDirec == -1)
-				p1.yDirec = 1;//reverse move if there is collision
-			else if (p1.yDirec == 1)
-				p1.yDirec = -1;
-			if (p1.xDirec == -1)
-				p1.xDirec = 1;
-			else if (p1.xDirec == 1)
-				p1.xDirec = -1;
-			//move player
-			p1.xNew += (4*p1.xDirec);
-			p1.yNew += (4*p1.yDirec);
-			
-		}
-		//detect reason to prevent y move
-		if ((p1.yDirec == -1 && p1.yNew < 400)||(p1.yDirec == 1 && p1.yNew+30 > getSize().height)||(gameOver || title ))
-			p1.yDirec = 0;
-		//detect reason to prevent x move
-		if((p1.xDirec == -1 && p1.xNew < 0)||(p1.xDirec == 1 && p1.xNew+30 > getSize().width)||(gameOver || title ))
-			p1.xDirec = 0;
-		
-
-		//move player
-		p1.xNew += (4*p1.xDirec);
-		p1.yNew += (4*p1.yDirec);
-		p1.x = p1.xNew;
-		p1.y = p1.yNew;
-	}
-
-	/**
-	 * Method to detect if there is a collision between the player and any of the barriers
-	 * 
-	 * TODO: look into fix for collision detection so player cannot glitch through barrier
-	 * 
-	 * @return true for collision detected and false for no collision 
-	 */
-	public boolean detectCollide(){
-		//handle player intersections with barriers
-		Barrier bar;
-		
-		for(int i = 0; i < barriers.size(); i++){
-			bar = barriers.get(i);
-			if(bar.isHit(p1.p) != -1)
-				return true;
-		}
-		return false;
 	}
 
 	/**
@@ -589,10 +465,11 @@ class GamePanel extends JPanel implements Runnable {
 			/** TODO: Add visual and auditory indicator so player knows the earth was hit */
 			if(!removed && temp.y > 750 && asteroids.size() > 0)
 			{
+				PlaySound(ShipExplode);//Play player explode sound
+				stopBackgroundMusic();
+				startBackgroundMusic(gameOverBkg);
 				asteroids.remove(i);
-				removed = true;
-				//createAsteroid();
-				
+				removed = true;				
 				gameOver = true;
 				
 				int reply = JOptionPane.showConfirmDialog(this, "Would you like to add your score to the High Score list?");
@@ -611,9 +488,8 @@ class GamePanel extends JPanel implements Runnable {
 			//asteroid collides with player
 			else if(!removed && temp.ast.intersects(p1.p) && asteroids.size() > 0 && p1.dead == false){
 				PlaySound(ShipExplode);//Play player explode sound
-				stopBkgMusic();
-				//startBkgMusic(gameOverBkg);
-				PlaySound(gameOverBkg);
+				stopBackgroundMusic();
+				startBackgroundMusic(gameOverBkg);
 				asteroids.remove(i);
 				removed = true;
 				gameOver = true;
@@ -728,7 +604,7 @@ class GamePanel extends JPanel implements Runnable {
 	public void paint(Graphics g){
 		buff = createImage(getWidth(), getHeight());
 		gImg = buff.getGraphics();
-		paintComponent(gImg);
+		paintComponents(gImg);
 		
 		g.drawImage(buff, 0, 0, this);
 	}
@@ -736,7 +612,7 @@ class GamePanel extends JPanel implements Runnable {
 	/**
 	 * Class to draw the game
 	 */
-	public void paintComponent(Graphics g1) {
+	public void paintComponents(Graphics g1) {
 		Graphics2D g = (Graphics2D)g1;
 		
 		//draw the background first
@@ -755,7 +631,7 @@ class GamePanel extends JPanel implements Runnable {
 		if(highScore)
 		{
 			int yPos = 230;
-			//g.drawImage(backImg, 0, 0, this);//clear board
+			g.drawImage(backImg, 0, 0, this);//clear board
 			g.setFont(tFont);//use same font as for title
 			g.drawString("--High Scores List--", 30, 150);//header for list
 			g.drawString("--------------------", 30, 190);
@@ -783,18 +659,6 @@ class GamePanel extends JPanel implements Runnable {
 			g.drawString("Use Earth's Defense barriers to aid you in", 65, 250);
 			g.drawString("keeping any asteroids from making it through.", 45, 270);
 			
-			/*
-			switch(difficulty)
-			{
-			case('m'):
-				g.drawString("- Difficulty: Med. -", 50, 250);
-				break;
-			case('d'):
-				g.drawString("- Difficulty: Hard -", 50, 250);
-				break;
-			default:
-				g.drawString("- Difficulty: Easy -", 50, 250);			
-			}*/
 			p1.draw(g);
 		}
 		else
@@ -822,11 +686,77 @@ class GamePanel extends JPanel implements Runnable {
 		
 		repaint();
 	}
+
+	/**
+	 * Files for sounds and method to play file objects
+	 */
+	/**	Sound effect for ship hit on barrier */
+	File Bounce = new File ("SoundEffects/Bounce.WAV");
+	/** Sound effect for Ship collision */
+	File ShipExplode = new File("SoundEffects/ShipExplosion.WAV");
+	/** Sound effect for Asteroid collision */
+	File AsteroidExplode = new File("SoundEffects/AsteroidsExplosion.WAV");
+	/** Sound effect for Barrier collision */
+	File BarrierHit = new File("SoundEffects/HitOnBarrier.WAV"); 
+	/** Sound effect for Barrier collision */
+	File Click = new File("SoundEffects/Click.WAV"); 
+	/** Sound effect for player shot */
+	File Shoot = new File("SoundEffects/Laser_Shoot.WAV");
+	/** sound for background music */
+	File titleBkg = new File("SoundEffects/titleBGM.WAV");
+	File playingBkg = new File("SoundEffects/Gameplay.WAV");
+	File gameOverBkg = new File("SoundEffects/GameOver.WAV");
+	
+	/** Object used to buffer background music */
+	AudioInputStream audioInputStream;
+	/** Clip object to play and stop music */
+	Clip bkgMusic = null;
+	
+	/**
+	 * Method to start playing a background music clip on a continuous loop
+	 * 
+	 * @param musicClip		File object referencing the music clip to loop
+	 */
+	public void startBackgroundMusic(File musicClip){
+		try {
+			audioInputStream = AudioSystem.getAudioInputStream(musicClip);
+			bkgMusic = AudioSystem.getClip();
+			bkgMusic.open(audioInputStream);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		bkgMusic.loop(Clip.LOOP_CONTINUOUSLY);
+		bkgMusic.start();
+	}
+	
+	/**
+	 * Method to stop background music clip 
+	 */
+	public void stopBackgroundMusic(){
+		bkgMusic.stop();
+	}
+	
+	/**
+	 * Method to play sound clips for game-play sound effects
+	 * 
+	 * @param Sound		sound file to load into audio system
+	 */
+	public void PlaySound(File Sound)
+
+	{
+		try{
+			Clip clip = AudioSystem.getClip();
+			clip.open(AudioSystem.getAudioInputStream(Sound));
+			clip.start();	
+		}catch(Exception e){
+			System.out.println(e);
+		}
+	}
 	
 	
 	/**
-	 * 
-	 *
+	 * Class to handle all user input and make game respond to it
 	 */
 	public class InputKeyEvents extends KeyAdapter {
 		public void keyPressed(KeyEvent key) {
@@ -844,19 +774,19 @@ class GamePanel extends JPanel implements Runnable {
 				//getHighScores();
 				highScore = !highScore;
 			}
-			if(keys == KeyEvent.VK_ENTER)//play game
+			if(keys == KeyEvent.VK_ENTER && !highScore)//play game
 			{
 				PlaySound(Click);
-				stopBkgMusic();
-				startBkgMusic(playingBkg);
-				highScore = false;//hide high scores list
+				stopBackgroundMusic();
+				startBackgroundMusic(playingBkg);
+				//highScore = false;//hide high scores list
 				title = false;
 				createAst = true;
 			}
 			if(keys == KeyEvent.VK_ESCAPE)//end game
 			{
-				stopBkgMusic();
-				startBkgMusic(titleBkg);
+				stopBackgroundMusic();
+				startBackgroundMusic(titleBkg);
 				highScore = false;//hide high scores list
 				title = true;
 			}

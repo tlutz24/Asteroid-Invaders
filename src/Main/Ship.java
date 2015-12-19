@@ -63,14 +63,65 @@ public class Ship{
 	}
 	
 	/**
+	 * Method to move player and prevent player from moving when necessary 
+	 */
+	public void movePlyr(List<Barrier> barriers, int gameWidth, int gameHeight) {
+		//check if move is allowed
+		setLocation(xNew, yNew);
+		if(detectCollide(barriers))//player collision with barrier
+		{
+			//prevent player from moving into barrier
+			if (yDirec == -1)
+				yDirec = 1;//reverse move if there is collision
+			else if (yDirec == 1)
+				yDirec = -1;
+			if (xDirec == -1)
+				xDirec = 1;
+			else if (xDirec == 1)
+				xDirec = -1;			
+		}
+		//detect reason to prevent y move
+		if ((yDirec == -1 && yNew < 400)||(yDirec == 1 && yNew+30 > gameHeight))
+			yDirec = 0;
+		//detect reason to prevent x move
+		if((xDirec == -1 && xNew < 0)||(xDirec == 1 && xNew+30 > gameWidth))
+			xDirec = 0;
+		
+
+		//move player
+		xNew += (4*xDirec);
+		yNew += (4*yDirec);
+		setLocation(xNew, yNew);
+	}
+	
+	/**
+	 * Method to detect if there is a collision between the player and any of the barriers
+	 * 
+	 * TODO: look into fix for collision detection so player cannot glitch through barrier
+	 * 
+	 * @return true for collision detected and false for no collision 
+	 */
+	public boolean detectCollide(List<Barrier> barriers){
+		//handle player intersections with barriers
+		Barrier bar;
+		
+		for(int i = 0; i < barriers.size(); i++){
+			bar = barriers.get(i);
+			if(bar.isHit(p) != -1)
+				return true;
+		}
+		return false;
+	}
+	
+	/**
 	 * Method to set location of player
 	 * 
 	 * @param X		integer to hold new x-coordinate of player
 	 * @param Y		integer to hold new y-coordinate of player
 	 */
 	public void setLocation(int X, int Y){
-		x = xNew = X;
-		y = yNew = Y;
+		x = X;
+		y = Y;
 		p = new Rectangle(x, y, 30, 30);
 	}
 	
@@ -81,6 +132,7 @@ public class Ship{
 		//set player to not dead
 		dead = false;
 		//set players initial location
+		xNew = 305;yNew = 650;
 		setLocation(305, 650);
 		//set players initial direction to null
 		changeDirec('s');

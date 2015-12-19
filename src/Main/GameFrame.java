@@ -10,6 +10,9 @@ import javax.swing.JFrame;
  * @author Tyler Lutz
  * @author Jason Liu
  *
+ * This is the main frame for the entire game 
+ * -We load the Game panel into this object
+ *
  */
 public class GameFrame extends JFrame {
 

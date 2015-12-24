@@ -784,6 +784,16 @@ class GamePanel extends JPanel implements Runnable {
 			}
 			if(keys == KeyEvent.VK_ESCAPE)//end game
 			{
+				if (title == true) 
+				{
+					int reply = JOptionPane.showConfirmDialog(null,"Are you sure you want to exit?", "Exit", JOptionPane.YES_NO_OPTION);
+					if(reply == JOptionPane.YES_NO_OPTION)
+					{
+						System.exit(0);
+			
+					}
+									
+				}
 				stopBackgroundMusic();
 				startBackgroundMusic(titleBkg);
 				highScore = false;//hide high scores list
